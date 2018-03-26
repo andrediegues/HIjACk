@@ -34,7 +34,7 @@ public class HIjACk extends Application {
     
     @Override
     public void start(Stage stage) throws Exception {
-        AnchorPane root = FXMLLoader.load(getClass().getResource("appLauncher.fxml"));
+        VBox root = FXMLLoader.load(getClass().getResource("appLauncher.fxml"));
         
         Scene scene = new Scene(root);
         stage.setScene(scene);
@@ -59,8 +59,8 @@ public class HIjACk extends Application {
                 else{
                     try {
                         // change scene to app
-                        VBox app = FXMLLoader.load(getClass().getResource("app2.fxml"));
-                        System.out.println(app.getChildren().size());
+                        VBox app = FXMLLoader.load(getClass().getResource("application.fxml"));
+                        //System.out.println(app.getChildren().size());
                         stage.setScene(new Scene(app));
                         stage.show();
                     } catch (IOException ex) {
