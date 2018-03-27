@@ -1,6 +1,11 @@
 package hijack;
 
-import java.net.URL;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -160,9 +165,10 @@ public class ApplicationController {
     void handleZoomOutAction(ActionEvent event) {
 
     }
-
+   
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
+        System.out.println("Application initialized");
         assert listView != null : "fx:id=\"listView\" was not injected: check your FXML file 'application.fxml'.";
         assert previousButton != null : "fx:id=\"previousButton\" was not injected: check your FXML file 'application.fxml'.";
         assert imageView != null : "fx:id=\"imageView\" was not injected: check your FXML file 'application.fxml'.";
@@ -176,5 +182,29 @@ public class ApplicationController {
         assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";
         assert observationsTextArea != null : "fx:id=\"observationsTextArea\" was not injected: check your FXML file 'application.fxml'.";
 
+    }
+
+    void initData(File choice) throws FileNotFoundException {
+        if(!checkExistingLog(choice)){
+            File out = new File(choice.getAbsolutePath() + choice.getName() + ".csv");
+        }
+        else{
+            BufferedReader br = new BufferedReader(new FileReader(choice.getAbsolutePath() + choice.getName() + ".csv"));
+        }
+        /*ObservableList<String> items = new ObservableList<String>
+        for(int i = 0; i < choice.listFiles().length; i++){
+            items.add(i, choice.listFiles()[i].getName());
+        }
+        listView.setItems(items);*/
+    }
+     
+    boolean checkExistingLog(File file){
+        File[] files = file.listFiles();
+        for(File f: files){
+            if(f.getName().equals(file.getName() + ".csv")){
+                return true;
+            }
+        }
+        return false;
     }
 }
