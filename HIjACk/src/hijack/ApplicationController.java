@@ -1,11 +1,8 @@
 package hijack;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import java.util.List;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -19,9 +16,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 
 public class ApplicationController {
+    
+    private File logFile;
+    private File currentDir;
 
     @FXML // fx:id="listView"
-    private ListView<?> listView; // Value injected by FXMLLoader
+    private ListView<String> listView; // Value injected by FXMLLoader
 
     @FXML // fx:id="previousButton"
     private Button previousButton; // Value injected by FXMLLoader
@@ -184,27 +184,23 @@ public class ApplicationController {
 
     }
 
-    void initData(File choice) throws FileNotFoundException {
-        if(!checkExistingLog(choice)){
-            File out = new File(choice.getAbsolutePath() + choice.getName() + ".csv");
-        }
-        else{
-            BufferedReader br = new BufferedReader(new FileReader(choice.getAbsolutePath() + choice.getName() + ".csv"));
-        }
-        /*ObservableList<String> items = new ObservableList<String>
-        for(int i = 0; i < choice.listFiles().length; i++){
-            items.add(i, choice.listFiles()[i].getName());
-        }
-        listView.setItems(items);*/
+    void initData(File choice, List<String> listOfNames) throws FileNotFoundException {
+        currentDir = choice;
+        logFile = checkExistingLog(choice);
+        if(logFile == null){
+            logFile = new File(choice.getAbsolutePath() + choice.getName() + ".csv");
+        }        
+        //System.out.println(logFile.length()); podemos ver se o ficheiro ja existia pelo tamanho do ficheiro, ie, se > 0 ja existia
+        listView.getItems().addAll(listOfNames);
     }
      
-    boolean checkExistingLog(File file){
+    private File checkExistingLog(File file){
         File[] files = file.listFiles();
         for(File f: files){
             if(f.getName().equals(file.getName() + ".csv")){
-                return true;
+                return f;
             }
         }
-        return false;
+        return null;
     }
 }
