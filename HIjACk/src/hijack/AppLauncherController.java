@@ -26,6 +26,10 @@ public class AppLauncherController {
     @FXML
     void handleLoadFolderAction(ActionEvent event) {
         Stage s = (Stage) vbox.getScene().getWindow();
+        getFolderFromStage(s);
+    }
+
+    public void getFolderFromStage(Stage s) {
         DirectoryChooser dc = new DirectoryChooser();
         dc.setInitialDirectory(new File(System.getProperty("user.home")));
         File choice = dc.showDialog(s);
@@ -38,11 +42,12 @@ public class AppLauncherController {
                 ApplicationController appController = app.getController();
                 
                 List<String> listOfNames = new ArrayList<>();
-                for(File f: choice.listFiles((File dir, String name) -> (name.contains(".jpg") || name.contains(".png")))){
+                for(File f: choice.listFiles((File dir, String name) -> (name.toLowerCase().contains(".jpg") || name.toLowerCase().contains(".png")))){
                     listOfNames.add(f.getName());
                 }     
                 if(listOfNames.isEmpty()){
                     Alert emptyDirectory = new Alert(Alert.AlertType.NONE, "Didn't find images. Please choose a different folder.", new ButtonType("Ok"));
+                    emptyDirectory.setTitle("Error");
                     emptyDirectory.showAndWait();
                 }
                 else{

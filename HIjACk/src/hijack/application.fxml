@@ -19,13 +19,15 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="1000.0" spacing="5.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.ApplicationController">
+<VBox fx:id="root" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" spacing="5.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.ApplicationController">
    <children>
       <MenuBar>
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
               <MenuItem mnemonicParsing="false" onAction="#handleOpenAction" text="Load Folder..." />
+                  <SeparatorMenuItem mnemonicParsing="false" />
+                  <MenuItem mnemonicParsing="false" onAction="#handleSaveAction" text="Save" />
                   <SeparatorMenuItem mnemonicParsing="false" />
                   <MenuItem mnemonicParsing="false" onAction="#handleCloseAction" text="Close" />
                   <MenuItem mnemonicParsing="false" onAction="#handleExitAction" text="Exit" />
@@ -67,7 +69,7 @@
                         </Button>
                      </left>
                      <center>
-                        <ImageView fx:id="imageView" onMouseClicked="#handleImageDoubleClickAction" onScroll="#handleImageScrollAction" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
+                        <ImageView fx:id="imageView" fitHeight="450.0" fitWidth="800.0" onScroll="#handleImageScrollAction" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
                      </center>
                      <right>
                         <Button fx:id="nextButton" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleNextAction" onKeyPressed="#handleNextKeyPress" text="&gt;" textAlignment="CENTER" BorderPane.alignment="CENTER">

@@ -2,24 +2,42 @@ package hijack;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class ApplicationController {
     
     private File logFile;
     private File currentDir;
+    private List<String> imageList;
 
+    @FXML
+    private VBox root;
+    
     @FXML // fx:id="listView"
     private ListView<String> listView; // Value injected by FXMLLoader
 
@@ -63,7 +81,18 @@ public class ApplicationController {
 
     @FXML
     void handleCloseAction(ActionEvent event) {
-
+        try {
+            Stage currentStage = (Stage) root.getScene().getWindow();
+            currentStage.close();
+            Parent appLauncher = FXMLLoader.load(getClass().getResource("appLauncher.fxml"));
+            Stage newStage = new Stage();
+            Scene launcher = new Scene(appLauncher);
+            newStage.setScene(launcher);
+            newStage.setTitle("HIjACk");
+            newStage.show();
+        } catch (IOException ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @FXML
@@ -88,26 +117,33 @@ public class ApplicationController {
 
     @FXML
     void handleExitAction(ActionEvent event) {
-
+        Stage currentStage = (Stage) root.getScene().getWindow();
+        currentStage.close();
     }
 
     @FXML
     void handleFilesClick(MouseEvent event) {
-
+        loadImage(listView.getSelectionModel().getSelectedItem());
     }
 
     @FXML
     void handleFilesKeyPress(KeyEvent event) {
+        String name = listView.getSelectionModel().getSelectedItem();
+        KeyCode character = event.getCode();
+        int index = imageList.indexOf(name);
+        if(character.equals(KeyCode.DOWN) && index < imageList.size() - 2){
+            name = imageList.get(index + 1);
+        }
+        else if(character.equals(KeyCode.UP) && index > 0){
+            name = imageList.get(index - 1);
+        }
+        String pathOfImage = currentDir.getAbsolutePath() + "/" + name;
+        loadImage(pathOfImage);
 
     }
 
     @FXML
     void handleFullScreenAction(ActionEvent event) {
-
-    }
-
-    @FXML
-    void handleImageDoubleClickAction(MouseEvent event) {
 
     }
 
@@ -127,7 +163,16 @@ public class ApplicationController {
     }
 
     @FXML
-    void handleOpenAction(ActionEvent event) {
+    void handleOpenAction(ActionEvent event) { // not working need to send stage to work
+        try {
+            Stage currentStage = (Stage) root.getScene().getWindow();
+            FXMLLoader appLauncher = new FXMLLoader(getClass().getResource("appLauncher.fxml"));
+            appLauncher.load();
+            AppLauncherController appLauncherController = appLauncher.getController();
+            appLauncherController.getFolderFromStage(currentStage);
+        } catch (IOException ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
     }
 
@@ -187,6 +232,7 @@ public class ApplicationController {
     void initData(File choice, List<String> listOfNames) throws FileNotFoundException {
         currentDir = choice;
         logFile = checkExistingLog(choice);
+        imageList = listOfNames;
         if(logFile == null){
             logFile = new File(choice.getAbsolutePath() + choice.getName() + ".csv");
         }        
@@ -202,5 +248,15 @@ public class ApplicationController {
             }
         }
         return null;
+    }
+
+    private void loadImage(String pathOfImage) {
+        try {
+            File imagefile = new File(pathOfImage);
+            Image image = new Image(imagefile.toURI().toURL().toString());
+            imageView.setImage(image);
+        } catch (MalformedURLException ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
