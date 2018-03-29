@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,7 +13,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
@@ -31,6 +35,7 @@ public class ApplicationController {
     private File logFile;
     private File currentDir;
     private List<String> imageList;
+    private boolean isModified;
 
     @FXML
     private VBox root;
@@ -72,10 +77,27 @@ public class ApplicationController {
     private TextArea observationsTextArea; // Value injected by FXMLLoader
 
     @FXML
-    void handleAboutAction(ActionEvent event) {
-
+    void handleAboutAction(ActionEvent event) throws MalformedURLException {
+        Alert about = new Alert(Alert.AlertType.NONE, "Please visit our GitHub page for more information:\n\t");
+        about.setTitle("About HIjACK");
+        about.getButtonTypes().add(ButtonType.OK);
+        about.setGraphic(new Hyperlink("https://github.com/andrediegues/HIjACk"));
+        about.showAndWait();
     }
 
+    @FXML
+    void handleOpenAction(ActionEvent event) { 
+        try {
+            Stage currentStage = (Stage) root.getScene().getWindow();
+            FXMLLoader appLauncher = new FXMLLoader(getClass().getResource("appLauncher.fxml"));
+            appLauncher.load();
+            AppLauncherController appLauncherController = appLauncher.getController();
+            appLauncherController.getFolderFromStage(currentStage);
+        } catch (IOException ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
     @FXML
     void handleCloseAction(ActionEvent event) {
         try {
@@ -93,6 +115,12 @@ public class ApplicationController {
     }
 
     @FXML
+    void handleExitAction(ActionEvent event) {
+        Stage currentStage = (Stage) root.getScene().getWindow();
+        currentStage.close();
+    }
+
+    @FXML
     void handleCopyAction(ActionEvent event) {
 
     }
@@ -101,6 +129,11 @@ public class ApplicationController {
     void handleCutAction(ActionEvent event) {
 
     }
+    
+    @FXML
+    void handlePasteAction(ActionEvent event) {
+
+    }   
 
     @FXML
     void handleDeleteAction(ActionEvent event) {
@@ -108,28 +141,16 @@ public class ApplicationController {
     }
 
     @FXML
-    void handleEditAction(ActionEvent event) {
-
-    }
-
-    @FXML
-    void handleExitAction(ActionEvent event) {
-        Stage currentStage = (Stage) root.getScene().getWindow();
-        currentStage.close();
-    }
-
-    @FXML
     void handleFilesClick(MouseEvent event) {
-        System.out.println(listView.getSelectionModel().getSelectedItem());
         if(listView.getSelectionModel().getSelectedItem() == null){
             return;
         }
         loadImage(currentDir + "/" + listView.getSelectionModel().getSelectedItem());
         fileName.setText(listView.getSelectionModel().getSelectedItem());
     }
-
+    
     @FXML
-    void handleFilesKeyPress(KeyEvent event) {
+    void handleKeyPress(KeyEvent event) {
         String name = listView.getSelectionModel().getSelectedItem();
         KeyCode character = event.getCode();
         int index = imageList.indexOf(name);
@@ -147,72 +168,43 @@ public class ApplicationController {
         else if(character.equals(KeyCode.UP) && index > 0){
             name = imageList.get(index - 1);
         }
-        else{// falta caso para o enter
+        else if(character.equals(KeyCode.ENTER)){
+            handleEditAction(new ActionEvent());
+        }
+        else{
             return;
+        }
+        if(!listView.isVisible()){
+            listView.scrollTo(index);
         }
         fileName.setText(name);
         String pathOfImage = currentDir.getAbsolutePath() + "/" + name;
         loadImage(pathOfImage);
-
-    }
-
-    @FXML
-    void handleFullScreenAction(ActionEvent event) {
-
-    }
-
-    @FXML
-    void handleImageScrollAction(ScrollEvent event) {
-
     }
 
     @FXML
     void handleNextAction(ActionEvent event) {
-        handleFilesKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.RIGHT, true, true, true, true));
+        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.RIGHT, true, true, true, true));
     }
-
-    @FXML
-    void handleNextKeyPress(KeyEvent event) {
-
-    }
-
-    @FXML
-    void handleOpenAction(ActionEvent event) { // not working need to send stage to work
-        try {
-            Stage currentStage = (Stage) root.getScene().getWindow();
-            FXMLLoader appLauncher = new FXMLLoader(getClass().getResource("appLauncher.fxml"));
-            appLauncher.load();
-            AppLauncherController appLauncherController = appLauncher.getController();
-            appLauncherController.getFolderFromStage(currentStage);
-        } catch (IOException ex) {
-            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
-
-    @FXML
-    void handlePasteAction(ActionEvent event) {
-
-    }
-
+    
     @FXML
     void handlePreviousAction(ActionEvent event) {
-        handleFilesKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.LEFT, true, true, true, true));
+        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.LEFT, true, true, true, true));
     }
-
+    
     @FXML
-    void handlePreviousKeyPress(KeyEvent event) {
+    void handleImageScrollAction(ScrollEvent event) {
 
+    }    
+    
+    @FXML
+    void handleEditAction(ActionEvent event) {
+        System.out.println("editei");
     }
 
     @FXML
     void handleSaveAction(ActionEvent event) {
         
-    }
-
-    @FXML
-    void handleTextAreaKeyPress(KeyEvent event) {
-
     }
 
     @FXML
@@ -224,7 +216,17 @@ public class ApplicationController {
     void handleZoomOutAction(ActionEvent event) {
 
     }
-   
+    
+    @FXML
+    void handleFullScreenAction(ActionEvent event) {
+
+    }
+    
+    @FXML
+    void handleTextAreaKeyPress(KeyEvent event) {
+
+    }
+    
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
         System.out.println("Application initialized");
@@ -247,6 +249,7 @@ public class ApplicationController {
         currentDir = choice;
         logFile = checkExistingLog(choice);
         imageList = listOfNames;
+        isModified = false;
         if(logFile == null){
             logFile = new File(choice.getAbsolutePath() + choice.getName() + ".csv");
         }        

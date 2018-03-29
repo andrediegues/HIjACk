@@ -42,7 +42,7 @@ public class AppLauncherController {
                 ApplicationController appController = app.getController();
                 
                 List<String> listOfNames = new ArrayList<>();
-                for(File f: choice.listFiles((File dir, String name) -> (name.toLowerCase().contains(".jpg") || name.toLowerCase().contains(".png")))){
+                for(File f: choice.listFiles((File dir, String name) -> (name.toLowerCase().contains(".jp") || name.toLowerCase().contains(".png") || name.toLowerCase().endsWith("if")))){
                     listOfNames.add(f.getName());
                 }     
                 if(listOfNames.isEmpty()){

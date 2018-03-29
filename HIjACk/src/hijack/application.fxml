@@ -15,7 +15,6 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
@@ -37,7 +36,7 @@
             <items>
               <MenuItem mnemonicParsing="false" onAction="#handleCutAction" text="Cut" />
                   <MenuItem mnemonicParsing="false" onAction="#handleCopyAction" text="Copy" />
-                  <MenuItem mnemonicParsing="false" onAction="#handlePasteAction" text="Paste" />
+                  <MenuItem disable="true" mnemonicParsing="false" onAction="#handlePasteAction" text="Paste" />
                   <MenuItem mnemonicParsing="false" onAction="#handleDeleteAction" text="Delete" />
             </items>
           </Menu>
@@ -55,24 +54,24 @@
         <items>
           <AnchorPane>
                <children>
-                  <ListView fx:id="listView" onKeyPressed="#handleFilesKeyPress" onMouseClicked="#handleFilesClick" prefHeight="456.0" prefWidth="244.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  <ListView fx:id="listView" onKeyPressed="#handleKeyPress" onMouseClicked="#handleFilesClick" prefHeight="456.0" prefWidth="244.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                </children>
             </AnchorPane>
-            <VBox prefHeight="160.0" prefWidth="339.0" spacing="10.0">
+            <VBox prefHeight="160.0" prefWidth="339.0">
                <children>
                   <BorderPane VBox.vgrow="ALWAYS">
                      <left>
-                        <Button fx:id="previousButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handlePreviousAction" onKeyPressed="#handlePreviousKeyPress" text="&lt;" textAlignment="CENTER" BorderPane.alignment="CENTER">
+                        <Button fx:id="previousButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handlePreviousAction" onKeyPressed="#handleKeyPress" text="&lt;" textAlignment="CENTER" BorderPane.alignment="CENTER">
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
                         </Button>
                      </left>
                      <center>
-                        <ImageView fx:id="imageView" fitHeight="450.0" fitWidth="800.0" onScroll="#handleImageScrollAction" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
+                        <ImageView fx:id="imageView" fitHeight="540.0" fitWidth="960.0" onScroll="#handleImageScrollAction" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
                      </center>
                      <right>
-                        <Button fx:id="nextButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleNextAction" onKeyPressed="#handleNextKeyPress" text="&gt;" textAlignment="CENTER" BorderPane.alignment="CENTER">
+                        <Button fx:id="nextButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleNextAction" text="&gt;" textAlignment="CENTER" BorderPane.alignment="CENTER">
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
@@ -127,19 +126,15 @@
                         <Label fx:id="fileName" BorderPane.alignment="CENTER" />
                      </top>
                   </BorderPane>
-                  <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0">
+                  <AnchorPane>
                      <children>
-                        <Label text="Observations:" />
-                        <TextArea fx:id="observationsTextArea" focusTraversable="false" onKeyPressed="#handleTextAreaKeyPress">
+                        <TextArea fx:id="observationsTextArea" focusTraversable="false" onKeyPressed="#handleTextAreaKeyPress" prefHeight="178.0" prefWidth="549.0" promptText="Observations" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
                         </TextArea>
                      </children>
-                     <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                     </padding>
-                  </HBox>
+                  </AnchorPane>
                </children>
             </VBox>
         </items>
