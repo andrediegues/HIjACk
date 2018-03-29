@@ -3,9 +3,7 @@ package hijack;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -22,7 +20,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -123,7 +120,12 @@ public class ApplicationController {
 
     @FXML
     void handleFilesClick(MouseEvent event) {
-        loadImage(listView.getSelectionModel().getSelectedItem());
+        System.out.println(listView.getSelectionModel().getSelectedItem());
+        if(listView.getSelectionModel().getSelectedItem() == null){
+            return;
+        }
+        loadImage(currentDir + "/" + listView.getSelectionModel().getSelectedItem());
+        fileName.setText(listView.getSelectionModel().getSelectedItem());
     }
 
     @FXML
@@ -131,12 +133,24 @@ public class ApplicationController {
         String name = listView.getSelectionModel().getSelectedItem();
         KeyCode character = event.getCode();
         int index = imageList.indexOf(name);
-        if(character.equals(KeyCode.DOWN) && index < imageList.size() - 2){
+        if(character.equals(KeyCode.RIGHT) && index < imageList.size() - 1){
+            listView.getSelectionModel().select(index + 1);
+            name = listView.getSelectionModel().getSelectedItem();
+        }
+        else if(character.equals(KeyCode.DOWN) && index < imageList.size() - 1){
             name = imageList.get(index + 1);
+        }
+        else if(character.equals(KeyCode.LEFT) && index > 0){
+            listView.getSelectionModel().select(index - 1);
+            name = listView.getSelectionModel().getSelectedItem();
         }
         else if(character.equals(KeyCode.UP) && index > 0){
             name = imageList.get(index - 1);
         }
+        else{// falta caso para o enter
+            return;
+        }
+        fileName.setText(name);
         String pathOfImage = currentDir.getAbsolutePath() + "/" + name;
         loadImage(pathOfImage);
 
@@ -154,7 +168,7 @@ public class ApplicationController {
 
     @FXML
     void handleNextAction(ActionEvent event) {
-
+        handleFilesKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.RIGHT, true, true, true, true));
     }
 
     @FXML
@@ -183,7 +197,7 @@ public class ApplicationController {
 
     @FXML
     void handlePreviousAction(ActionEvent event) {
-
+        handleFilesKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.LEFT, true, true, true, true));
     }
 
     @FXML
@@ -193,7 +207,7 @@ public class ApplicationController {
 
     @FXML
     void handleSaveAction(ActionEvent event) {
-
+        
     }
 
     @FXML

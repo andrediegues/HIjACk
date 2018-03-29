@@ -62,7 +62,7 @@
                <children>
                   <BorderPane VBox.vgrow="ALWAYS">
                      <left>
-                        <Button fx:id="previousButton" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handlePreviousAction" onKeyPressed="#handlePreviousKeyPress" text="&lt;" textAlignment="CENTER" BorderPane.alignment="CENTER">
+                        <Button fx:id="previousButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handlePreviousAction" onKeyPressed="#handlePreviousKeyPress" text="&lt;" textAlignment="CENTER" BorderPane.alignment="CENTER">
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
@@ -72,7 +72,7 @@
                         <ImageView fx:id="imageView" fitHeight="450.0" fitWidth="800.0" onScroll="#handleImageScrollAction" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
                      </center>
                      <right>
-                        <Button fx:id="nextButton" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleNextAction" onKeyPressed="#handleNextKeyPress" text="&gt;" textAlignment="CENTER" BorderPane.alignment="CENTER">
+                        <Button fx:id="nextButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleNextAction" onKeyPressed="#handleNextKeyPress" text="&gt;" textAlignment="CENTER" BorderPane.alignment="CENTER">
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
@@ -87,12 +87,12 @@
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </padding>
                               </TextField>
-                              <Button fx:id="editButton" mnemonicParsing="false" onAction="#handleEditAction" text="Edit">
+                              <Button fx:id="editButton" focusTraversable="false" mnemonicParsing="false" onAction="#handleEditAction" text="Edit">
                                  <padding>
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </padding>
                               </Button>
-                              <Button fx:id="saveButton" mnemonicParsing="false" onAction="#handleSaveAction" text="Save">
+                              <Button fx:id="saveButton" focusTraversable="false" mnemonicParsing="false" onAction="#handleSaveAction" text="Save">
                                  <padding>
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </padding>
@@ -102,17 +102,17 @@
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </padding>
                               </Region>
-                              <Button fx:id="zoomInButton" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleZoomInAction" text="+" textAlignment="CENTER">
+                              <Button fx:id="zoomInButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleZoomInAction" text="+" textAlignment="CENTER">
                                  <padding>
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </padding>
                               </Button>
-                              <Button fx:id="zoomOutButton" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleZoomOutAction" text=" - " textAlignment="CENTER">
+                              <Button fx:id="zoomOutButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleZoomOutAction" text=" - " textAlignment="CENTER">
                                  <padding>
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </padding>
                               </Button>
-                              <Button fx:id="fullScreenButton" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#handleFullScreenAction" text="[ ]" textAlignment="CENTER">
+                              <Button fx:id="fullScreenButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleFullScreenAction" text="[ ]" textAlignment="CENTER">
                                  <padding>
                                     <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                  </padding>
@@ -130,7 +130,7 @@
                   <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0">
                      <children>
                         <Label text="Observations:" />
-                        <TextArea fx:id="observationsTextArea" onKeyPressed="#handleTextAreaKeyPress">
+                        <TextArea fx:id="observationsTextArea" focusTraversable="false" onKeyPressed="#handleTextAreaKeyPress">
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
