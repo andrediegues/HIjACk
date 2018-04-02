@@ -5,12 +5,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -19,7 +22,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -28,14 +30,17 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class ApplicationController {
+public class ApplicationController implements Initializable{
     
     private File logFile;
     private File currentDir;
     private List<String> imageList;
     private boolean isModified;
+    EunisClassification currentImageClassification;
+    private ArrayList<EunisClassification> data; 
 
     @FXML
     private VBox root;
@@ -61,27 +66,18 @@ public class ApplicationController {
     @FXML // fx:id="saveButton"
     private Button saveButton; // Value injected by FXMLLoader
 
-    @FXML // fx:id="zoomInButton"
-    private Button zoomInButton; // Value injected by FXMLLoader
-
-    @FXML // fx:id="zoomOutButton"
-    private Button zoomOutButton; // Value injected by FXMLLoader
-
     @FXML // fx:id="fullScreenButton"
     private Button fullScreenButton; // Value injected by FXMLLoader
 
     @FXML // fx:id="fileName"
     private Label fileName; // Value injected by FXMLLoader
 
-    @FXML // fx:id="observationsTextArea"
-    private TextArea observationsTextArea; // Value injected by FXMLLoader
-
     @FXML
     void handleAboutAction(ActionEvent event) throws MalformedURLException {
-        Alert about = new Alert(Alert.AlertType.NONE, "Please visit our GitHub page for more information:\n\t");
+        Alert about = new Alert(Alert.AlertType.NONE);
         about.setTitle("About HIjACK");
         about.getButtonTypes().add(ButtonType.OK);
-        about.setGraphic(new Hyperlink("https://github.com/andrediegues/HIjACk"));
+        about.setGraphic(new Hyperlink("https://github.com/andrediegues/HIjACk"));        
         about.showAndWait();
     }
 
@@ -121,28 +117,10 @@ public class ApplicationController {
     }
 
     @FXML
-    void handleCopyAction(ActionEvent event) {
-
-    }
-
-    @FXML
-    void handleCutAction(ActionEvent event) {
-
-    }
-    
-    @FXML
-    void handlePasteAction(ActionEvent event) {
-
-    }   
-
-    @FXML
-    void handleDeleteAction(ActionEvent event) {
-
-    }
-
-    @FXML
     void handleFilesClick(MouseEvent event) {
+        editButton.setDisable(false);
         if(listView.getSelectionModel().getSelectedItem() == null){
+            editButton.setDisable(true);
             return;
         }
         loadImage(currentDir + "/" + listView.getSelectionModel().getSelectedItem());
@@ -151,6 +129,7 @@ public class ApplicationController {
     
     @FXML
     void handleKeyPress(KeyEvent event) {
+        editButton.setDisable(false);
         String name = listView.getSelectionModel().getSelectedItem();
         KeyCode character = event.getCode();
         int index = imageList.indexOf(name);
@@ -199,50 +178,49 @@ public class ApplicationController {
     
     @FXML
     void handleEditAction(ActionEvent event) {
-        System.out.println("editei");
+        if(listView.getSelectionModel().getSelectedItem() == null){
+            return;
+        }
+        try {
+            FXMLLoader edit                      = new FXMLLoader(getClass().getResource("editEUNIS.fxml"));
+            Parent editRoot                      = edit.load();
+            EditController editController = edit.getController();
+            
+            Stage editStage = new Stage();
+            editStage.initModality(Modality.APPLICATION_MODAL);
+            Scene editScene = new Scene(editRoot);
+            editStage.setScene(editScene);
+            currentImageClassification = editController.handleEdition(editStage, listView.getSelectionModel().getSelectedItem());
+            if(currentImageClassification != null){
+                EUNISClass.setText(currentImageClassification.getClassValue());
+                data.add(currentImageClassification);
+            }
+            editStage.close();
+        } catch (IOException ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @FXML
     void handleSaveAction(ActionEvent event) {
         
     }
-
-    @FXML
-    void handleZoomInAction(ActionEvent event) {
-
-    }
-
-    @FXML
-    void handleZoomOutAction(ActionEvent event) {
-
-    }
     
     @FXML
     void handleFullScreenAction(ActionEvent event) {
-
-    }
-    
-    @FXML
-    void handleTextAreaKeyPress(KeyEvent event) {
-
-    }
-    
-    @FXML // This method is called by the FXMLLoader when initialization is complete
-    void initialize() {
-        System.out.println("Application initialized");
-        assert listView != null : "fx:id=\"listView\" was not injected: check your FXML file 'application.fxml'.";
-        assert previousButton != null : "fx:id=\"previousButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert imageView != null : "fx:id=\"imageView\" was not injected: check your FXML file 'application.fxml'.";
-        assert nextButton != null : "fx:id=\"nextButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert EUNISClass != null : "fx:id=\"EUNISClass\" was not injected: check your FXML file 'application.fxml'.";
-        assert editButton != null : "fx:id=\"editButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert zoomInButton != null : "fx:id=\"zoomInButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert zoomOutButton != null : "fx:id=\"zoomOutButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert fullScreenButton != null : "fx:id=\"fullScreenButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";
-        assert observationsTextArea != null : "fx:id=\"observationsTextArea\" was not injected: check your FXML file 'application.fxml'.";
-
+        try {
+            FXMLLoader fsImage = new FXMLLoader(getClass().getResource("fullscreen.fxml"));
+            Parent fsRoot = fsImage.load();
+            FullscreenController fsController = fsImage.getController();
+            fsController.addImageToImageView(currentDir + "/" + listView.getSelectionModel().getSelectedItem());
+            Stage fsStage = new Stage();
+            fsStage.setScene(new Scene(fsRoot));
+            fsStage.initModality(Modality.APPLICATION_MODAL);
+            fsStage.setTitle(listView.getSelectionModel().getSelectedItem());
+            fsStage.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     void initData(File choice, List<String> listOfNames) throws FileNotFoundException {
@@ -250,6 +228,7 @@ public class ApplicationController {
         logFile = checkExistingLog(choice);
         imageList = listOfNames;
         isModified = false;
+        data = new ArrayList<>();
         if(logFile == null){
             logFile = new File(choice.getAbsolutePath() + choice.getName() + ".csv");
         }        
@@ -269,6 +248,8 @@ public class ApplicationController {
 
     private void loadImage(String pathOfImage) {
         try {
+            EUNISClass.setText("");
+            // falta ir buscar de novo a classificaçao quando se volta a mesma imagem
             File imagefile = new File(pathOfImage);
             Image image = new Image(imagefile.toURI().toURL().toString());
             imageView.setImage(image);
@@ -276,4 +257,17 @@ public class ApplicationController {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        System.out.println("Application initialized");
+        assert listView != null : "fx:id=\"listView\" was not injected: check your FXML file 'application.fxml'.";
+        assert previousButton != null : "fx:id=\"previousButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert imageView != null : "fx:id=\"imageView\" was not injected: check your FXML file 'application.fxml'.";
+        assert nextButton != null : "fx:id=\"nextButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert EUNISClass != null : "fx:id=\"EUNISClass\" was not injected: check your FXML file 'application.fxml'.";
+        assert editButton != null : "fx:id=\"editButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert fullScreenButton != null : "fx:id=\"fullScreenButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";    }
 }
