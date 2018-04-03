@@ -31,7 +31,7 @@ import javafx.stage.Stage;
 public class EditController {
     
     Stage stage;
-    EunisClassification classification;
+    String classification;
     String filename;
 
     @FXML
@@ -44,8 +44,8 @@ public class EditController {
 
     @FXML
     void handleOkButtonAction(ActionEvent event) {
-        classification = new EunisClassification(filename, eunisTextField.getText());
-        if(!classification.isValid()){
+        classification = eunisTextField.getText();
+        if(!isValid(classification)){
             classification = null;
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please insert a valid classification.", ButtonType.OK);
             alert.setTitle("Not a valid classification!");
@@ -67,11 +67,28 @@ public class EditController {
      * @param filename
      * @return
      */
-    public EunisClassification handleEdition(Stage editStage, String filename) {
+    public String handleEdition(Stage editStage, String filename) {
         stage = editStage;
         classification = null;
         this.filename = filename;
         stage.showAndWait();
         return classification;
+    }
+    
+    public boolean isValid(String classification){
+        if(classification.isEmpty()){
+            return true;
+        }
+        char level0 = classification.charAt(0);
+        if(!Character.isAlphabetic(level0)){
+            return false;
+        }
+        int length = classification.length();
+        for(int i = 1; i < length; i++){
+            if(!Character.isDigit(classification.charAt(i)) && classification.charAt(i) != '.'){
+                return false;
+            }
+        }
+        return true;
     }
 }

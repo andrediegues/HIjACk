@@ -13,6 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -22,6 +23,21 @@ public class AppLauncherController {
     
     @FXML
     private VBox vbox;
+    
+    @FXML
+    void handleExitAction(ActionEvent event) {
+        Stage stage = (Stage) vbox.getScene().getWindow();
+        stage.close();
+    }
+
+    @FXML
+    void handleHelpAction(ActionEvent event) {
+        Alert about = new Alert(Alert.AlertType.NONE);
+        about.setTitle("About HIjACK");
+        about.getButtonTypes().add(ButtonType.OK);
+        about.setGraphic(new Hyperlink("https://github.com/andrediegues/HIjACk"));        
+        about.showAndWait();
+    }
     
     @FXML
     void handleLoadFolderAction(ActionEvent event) {
@@ -46,14 +62,14 @@ public class AppLauncherController {
                     listOfNames.add(f.getName());
                 }     
                 if(listOfNames.isEmpty()){
-                    Alert emptyDirectory = new Alert(Alert.AlertType.NONE, "Didn't find images. Please choose a different folder.", new ButtonType("Ok"));
+                    Alert emptyDirectory = new Alert(Alert.AlertType.NONE, "Didn't find images. Please choose a different folder.", ButtonType.OK);
                     emptyDirectory.setTitle("Error");
                     emptyDirectory.showAndWait();
                 }
                 else{
                     s.close();
                     listOfNames.sort((String o1, String o2) -> o1.toUpperCase().compareTo(o2.toUpperCase()));
-
+                    System.out.println("Loading folder " + choice);
                     appController.initData(choice, listOfNames);
                     Stage application = new Stage();
                     application.setScene(new Scene(appRoot));

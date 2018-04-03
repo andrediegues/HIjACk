@@ -1,13 +1,18 @@
 package hijack;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
@@ -39,8 +44,7 @@ public class ApplicationController implements Initializable{
     private File currentDir;
     private List<String> imageList;
     private boolean isModified;
-    EunisClassification currentImageClassification;
-    private ArrayList<EunisClassification> data; 
+    private HashMap<String, String> data; 
 
     @FXML
     private VBox root;
@@ -169,40 +173,42 @@ public class ApplicationController implements Initializable{
     @FXML
     void handlePreviousAction(ActionEvent event) {
         handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.LEFT, true, true, true, true));
-    }
-    
-    @FXML
-    void handleImageScrollAction(ScrollEvent event) {
-
-    }    
+    }   
     
     @FXML
     void handleEditAction(ActionEvent event) {
-        if(listView.getSelectionModel().getSelectedItem() == null){
+        String filename = listView.getSelectionModel().getSelectedItem();
+        if(filename == null){
             return;
         }
-        try {
-            FXMLLoader edit                      = new FXMLLoader(getClass().getResource("editEUNIS.fxml"));
-            Parent editRoot                      = edit.load();
-            EditController editController = edit.getController();
-            
-            Stage editStage = new Stage();
-            editStage.initModality(Modality.APPLICATION_MODAL);
-            Scene editScene = new Scene(editRoot);
-            editStage.setScene(editScene);
-            currentImageClassification = editController.handleEdition(editStage, listView.getSelectionModel().getSelectedItem());
-            if(currentImageClassification != null){
-                EUNISClass.setText(currentImageClassification.getClassValue());
-                data.add(currentImageClassification);
-            }
-            editStage.close();
-        } catch (IOException ex) {
-            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        String classification = EUNISClass.getText();
+        if(!isValid(classification)){
+            classification = null;
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please insert a valid classification.", ButtonType.OK);
+            alert.setTitle("Not a valid classification!");
+            alert.showAndWait();
+        }
+        else if(classification != null){
+            data.put(filename, classification);
         }
     }
 
     @FXML
     void handleSaveAction(ActionEvent event) {
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter(logFile));
+            bw.write("filename, classificationValue\n");
+            data.forEach((String key, String value) -> {
+                try {
+                    bw.write(key + "," + value + "\n");
+                } catch (IOException ex) {
+                    Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
+            bw.close();
+        } catch (IOException ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
     }
     
@@ -228,11 +234,30 @@ public class ApplicationController implements Initializable{
         logFile = checkExistingLog(choice);
         imageList = listOfNames;
         isModified = false;
-        data = new ArrayList<>();
+        editButton.setDisable(true);
+        data = new HashMap<>();
         if(logFile == null){
-            logFile = new File(choice.getAbsolutePath() + choice.getName() + ".csv");
+            logFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + ".csv");
+            listOfNames.forEach((name) -> data.put(name, ""));
         }        
         //System.out.println(logFile.length()); podemos ver se o ficheiro ja existia pelo tamanho do ficheiro, ie, se > 0 ja existia
+        else{
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(logFile));
+                String line = br.readLine();
+                while((line = br.readLine()) != null){
+                    if(line.split(",").length > 1){
+                        data.put(line.split(",")[0], line.split(",")[1]);
+                    }
+                    else{
+                        data.put(line.split(",")[0], "");
+                    }
+                }   
+                br.close();
+            } catch (IOException ex) {
+                Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
         listView.getItems().addAll(listOfNames);
     }
      
@@ -248,14 +273,35 @@ public class ApplicationController implements Initializable{
 
     private void loadImage(String pathOfImage) {
         try {
-            EUNISClass.setText("");
-            // falta ir buscar de novo a classificaçao quando se volta a mesma imagem
+            String[] names = pathOfImage.split("/");
+            if(data.containsKey(names[names.length-1])){
+                EUNISClass.setText(data.get(names[names.length-1]));
+            } else {
+                EUNISClass.setText("");
+            }
             File imagefile = new File(pathOfImage);
             Image image = new Image(imagefile.toURI().toURL().toString());
             imageView.setImage(image);
         } catch (MalformedURLException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public boolean isValid(String classification){
+        if(classification.isEmpty()){
+            return true;
+        }
+        char level0 = classification.charAt(0);
+        if(!Character.isAlphabetic(level0)){
+            return false;
+        }
+        int length = classification.length();
+        for(int i = 1; i < length; i++){
+            if(!Character.isDigit(classification.charAt(i)) && classification.charAt(i) != '.'){
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -269,5 +315,6 @@ public class ApplicationController implements Initializable{
         assert editButton != null : "fx:id=\"editButton\" was not injected: check your FXML file 'application.fxml'.";
         assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'application.fxml'.";
         assert fullScreenButton != null : "fx:id=\"fullScreenButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";    }
+        assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";    
+    }
 }

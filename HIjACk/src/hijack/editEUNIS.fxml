@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<VBox alignment="CENTER" prefWidth="400.0" spacing="10.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.EditController">
+<VBox alignment="CENTER" prefWidth="400.0" spacing="10.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.EditController">
    <children>
       <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Insert the new EUNIS classification.">
          <VBox.margin>
