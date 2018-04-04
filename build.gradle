@@ -11,6 +11,17 @@ buildscript {
 
 apply plugin: 'java'
 
+sourceSets {
+	main {
+		java {
+			 srcDirs = ['HIjACk/src']			 
+		}
+		resources {
+            srcDirs = ['HIjACk/src']
+        }
+	}
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
