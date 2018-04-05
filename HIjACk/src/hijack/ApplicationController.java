@@ -12,13 +12,13 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -33,10 +33,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
+import javafx.util.Duration;
+import org.controlsfx.control.Notifications;
 
 public class ApplicationController implements Initializable{
     
@@ -100,7 +102,10 @@ public class ApplicationController implements Initializable{
     }
     @FXML
     void handleCloseAction(ActionEvent event) {
-        try {
+        try {            
+            if(!exitWithUnsavedModifications()){
+                return;
+            }
             Stage currentStage = (Stage) root.getScene().getWindow();
             currentStage.close();
             Parent appLauncher = FXMLLoader.load(getClass().getResource("appLauncher.fxml"));
@@ -116,6 +121,9 @@ public class ApplicationController implements Initializable{
 
     @FXML
     void handleExitAction(ActionEvent event) {
+        if(!exitWithUnsavedModifications()){
+            return;
+        }        
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
@@ -189,23 +197,49 @@ public class ApplicationController implements Initializable{
             alert.showAndWait();
         }
         else if(classification != null){
-            data.put(filename, classification);
+            if(!classification.equals(data.get(filename))){
+                isModified = true;
+                data.put(filename, classification);
+                Notifications editNotification = Notifications.create()
+                                        .text("Edited " + filename + " successfully")
+                                        .hideAfter(Duration.seconds(3))
+                                        .title("Edit")
+                                        .position(Pos.TOP_RIGHT);
+                editNotification.showInformation();
+            }
         }
     }
 
     @FXML
     void handleSaveAction(ActionEvent event) {
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(logFile));
-            bw.write("filename, classificationValue\n");
-            data.forEach((String key, String value) -> {
-                try {
-                    bw.write(key + "," + value + "\n");
-                } catch (IOException ex) {
-                    Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            });
-            bw.close();
+            if(isModified){
+                isModified = false;
+                BufferedWriter bw = new BufferedWriter(new FileWriter(logFile));
+                bw.write("filename, classificationValue\n");
+                data.forEach((String key, String value) -> {
+                    try {
+                        bw.write(key + "," + value + "\n");
+                    } catch (IOException ex) {
+                        Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                });
+                bw.close();
+                Notifications saveNotification = Notifications.create()
+                                .text("File was saved in " + logFile.getAbsolutePath())
+                                .hideAfter(Duration.seconds(3))
+                                .title("Save")
+                                .position(Pos.TOP_RIGHT);
+                saveNotification.showInformation();
+            }
+            else{
+                Notifications saveNotification = Notifications.create()
+                                .text("Nothing to save")
+                                .hideAfter(Duration.seconds(3))
+                                .title("Save")
+                                .position(Pos.TOP_RIGHT);
+                saveNotification.showInformation();
+            }
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -229,7 +263,7 @@ public class ApplicationController implements Initializable{
         }
     }
 
-    void initData(File choice, List<String> listOfNames) throws FileNotFoundException {
+    void initData(Stage appStage, File choice, List<String> listOfNames) throws FileNotFoundException {
         currentDir = choice;
         logFile = checkExistingLog(choice);
         imageList = listOfNames;
@@ -240,7 +274,6 @@ public class ApplicationController implements Initializable{
             logFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + ".csv");
             listOfNames.forEach((name) -> data.put(name, ""));
         }        
-        //System.out.println(logFile.length()); podemos ver se o ficheiro ja existia pelo tamanho do ficheiro, ie, se > 0 ja existia
         else{
             try {
                 BufferedReader br = new BufferedReader(new FileReader(logFile));
@@ -259,6 +292,9 @@ public class ApplicationController implements Initializable{
             }
         }
         listView.getItems().addAll(listOfNames);
+        appStage.setOnCloseRequest((WindowEvent event) -> {
+            exitWithUnsavedModifications();
+        });
     }
      
     private File checkExistingLog(File file){
@@ -317,4 +353,25 @@ public class ApplicationController implements Initializable{
         assert fullScreenButton != null : "fx:id=\"fullScreenButton\" was not injected: check your FXML file 'application.fxml'.";
         assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";    
     }
+
+    private boolean exitWithUnsavedModifications() {
+        if(!isModified){
+            return true;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Do you want to save before leaving?", ButtonType.YES, ButtonType.NO);
+        alert.setHeaderText("You have unsaved changes");
+        alert.setTitle("Unsaved Changes");
+        alert.showAndWait();
+        ButtonType result = alert.getResult();
+        
+        if(result.equals(ButtonType.YES)){
+            handleSaveAction(new ActionEvent());
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+    
+    
 }

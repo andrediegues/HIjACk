@@ -70,8 +70,8 @@ public class AppLauncherController {
                     s.close();
                     listOfNames.sort((String o1, String o2) -> o1.toUpperCase().compareTo(o2.toUpperCase()));
                     System.out.println("Loading folder " + choice);
-                    appController.initData(choice, listOfNames);
                     Stage application = new Stage();
+                    appController.initData(application, choice, listOfNames);
                     application.setScene(new Scene(appRoot));
                     application.setTitle("HIjACk");
                     application.show();
