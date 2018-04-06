@@ -34,3 +34,7 @@ jfx {
     mainClass = 'hijack.HIjACk'        
     vendor = 'LSTS'
 }
+
+dependencies {
+    compile 'org.controlsfx:controlsfx:8.40.14'
+}

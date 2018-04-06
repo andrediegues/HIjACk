@@ -28,7 +28,6 @@ gradle jfxRun
 
 ## Built With
 
-* [Gradle](https://gradle.org/)
 * [JavaFX](http://www.oracle.com/technetwork/java/javase/overview/javafx-overview-2158620.html)
 * [Scene Builder](http://gluonhq.com/products/scene-builder/) 
 
@@ -40,6 +39,6 @@ See also the list of [contributors](https://github.com/andrediegues/HIjACk/contr
 
 ## License
 
-This project is licensed under the European Union Public Licence EUPL 1.2 - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
 
 
