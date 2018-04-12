@@ -9,9 +9,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
@@ -189,14 +191,28 @@ public class ApplicationController implements Initializable{
         if(filename == null){
             return;
         }
-        String classification = EUNISClass.getText();
-        if(!isValid(classification)){
+        String classification = EUNISClass.getText().toUpperCase();
+        if(classification.contains(" ")){
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please remove all blank spaces.", ButtonType.OK);
+            alert.setTitle(classification + " contains blank spaces!");
             classification = null;
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please insert a valid classification.", ButtonType.OK);
-            alert.setTitle("Not a valid classification!");
             alert.showAndWait();
         }
-        else if(classification != null){
+        else if(!isValid(classification)){
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please insert a valid classification.", ButtonType.OK);
+            alert.setTitle(classification + " is not a valid classification!");
+            classification = null;
+            alert.showAndWait();
+        }
+        else{
+            String s = classification.toUpperCase();
+            StringBuilder finalClass = new StringBuilder();
+            for(int i = 0; i < s.length(); i++){
+                if(s.charAt(i) != ' '){
+                    finalClass.append(s.charAt(i));
+                }
+            }
+            EUNISClass.setText(finalClass.toString());
             if(!classification.equals(data.get(filename))){
                 isModified = true;
                 data.put(filename, classification);
@@ -324,17 +340,31 @@ public class ApplicationController implements Initializable{
     }
     
     public boolean isValid(String classification){
-        if(classification.isEmpty()){
+        if(classification.isEmpty() || classification.equals("-1")){
             return true;
         }
-        char level0 = classification.charAt(0);
-        if(!Character.isAlphabetic(level0)){
+        String[] classes = classification.split("/");
+        if(classification.contains("/") && classes.length < 2){
             return false;
         }
-        int length = classification.length();
-        for(int i = 1; i < length; i++){
-            if(!Character.isDigit(classification.charAt(i)) && classification.charAt(i) != '.'){
+        for(String cl: classes){
+            Scanner scanner = new Scanner(cl);
+            if(!scanner.hasNext()){
                 return false;
+            }
+            String c = scanner.next();
+            if(c.equals("")){
+                return false;
+            }
+            char level1 = c.charAt(0);
+            if(!Character.isAlphabetic(level1)){
+                return false;
+            }
+            int length = c.length();
+            for(int i = 1; i < length; i++){
+                if(!Character.isDigit(c.charAt(i)) && c.charAt(i) != '.'){
+                    return false;
+                }
             }
         }
         return true;
