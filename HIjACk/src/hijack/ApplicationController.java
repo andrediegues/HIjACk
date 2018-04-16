@@ -164,6 +164,9 @@ public class ApplicationController implements Initializable{
         else if(character.equals(KeyCode.ENTER)){
             handleEditAction(new ActionEvent());
         }
+        else if(event.isControlDown() && character.equals(KeyCode.S)){
+            handleSaveAction(new ActionEvent());
+        }
         else{
             return;
         }
