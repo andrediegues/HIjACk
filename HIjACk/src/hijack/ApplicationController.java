@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -208,12 +207,14 @@ public class ApplicationController implements Initializable{
         if(classification.contains(" ")){
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please remove all blank spaces.", ButtonType.OK);
             alert.setTitle(classification + " contains blank spaces!");
+            alert.setGraphic(new ImageView("images/ic_error_black_48dp.png"));
             classification = null;
             alert.showAndWait();
         }
         else if(!isValid(classification)){
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please insert a valid classification.", ButtonType.OK);
             alert.setTitle(classification + " is not a valid classification!");
+            alert.setGraphic(new ImageView("images/ic_error_black_48dp.png"));
             classification = null;
             alert.showAndWait();
         }
@@ -233,6 +234,7 @@ public class ApplicationController implements Initializable{
                                         .text("Edited " + filename + " successfully")
                                         .hideAfter(Duration.seconds(3))
                                         .title("Edit")
+                                        .graphic(new ImageView("images/ic_done_black_48dp.png"))
                                         .position(Pos.TOP_RIGHT);
                 editNotification.showInformation();
             }
@@ -258,6 +260,7 @@ public class ApplicationController implements Initializable{
                                 .text("File was saved in " + logFile.getAbsolutePath())
                                 .hideAfter(Duration.seconds(3))
                                 .title("Save")
+                                .graphic(new ImageView("images/ic_done_black_48dp.png"))
                                 .position(Pos.TOP_RIGHT);
                 saveNotification.showInformation();
             }
@@ -266,6 +269,7 @@ public class ApplicationController implements Initializable{
                                 .text("Nothing to save")
                                 .hideAfter(Duration.seconds(3))
                                 .title("Save")
+                                .graphic(new ImageView("images/ic_info_black_48dp.png"))
                                 .position(Pos.TOP_RIGHT);
                 saveNotification.showInformation();
             }
@@ -386,15 +390,6 @@ public class ApplicationController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("Application initialized");
-        assert listView != null : "fx:id=\"listView\" was not injected: check your FXML file 'application.fxml'.";
-        assert previousButton != null : "fx:id=\"previousButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert imageView != null : "fx:id=\"imageView\" was not injected: check your FXML file 'application.fxml'.";
-        assert nextButton != null : "fx:id=\"nextButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert EUNISClass != null : "fx:id=\"EUNISClass\" was not injected: check your FXML file 'application.fxml'.";
-        assert editButton != null : "fx:id=\"editButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert fullScreenButton != null : "fx:id=\"fullScreenButton\" was not injected: check your FXML file 'application.fxml'.";
-        assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";    
     }
 
     private boolean exitWithUnsavedModifications() {
@@ -404,6 +399,7 @@ public class ApplicationController implements Initializable{
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Do you want to save before leaving?", ButtonType.YES, ButtonType.NO);
         alert.setHeaderText("You have unsaved changes");
         alert.setTitle("Unsaved Changes");
+        alert.setGraphic(new ImageView("images/ic_report_problem_black_48dp.png"));
         alert.showAndWait();
         ButtonType result = alert.getResult();
         

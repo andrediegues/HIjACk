@@ -11,6 +11,8 @@
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
@@ -57,21 +59,24 @@
                      </padding>
                   </ButtonBar>
                   <BorderPane VBox.vgrow="ALWAYS">
-                     <left>
-                        <Button fx:id="previousButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handlePreviousAction" onKeyPressed="#handleKeyPress" text=" &lt; " textAlignment="CENTER" BorderPane.alignment="CENTER">
-                           <padding>
-                              <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                           </padding>
-                        </Button>
-                     </left>
                      <center>
                         <ImageView fx:id="imageView" fitHeight="540.0" fitWidth="960.0" pickOnBounds="true" preserveRatio="true" BorderPane.alignment="CENTER" />
                      </center>
                      <right>
-                        <Button fx:id="nextButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleNextAction" text=" &gt; " textAlignment="CENTER" BorderPane.alignment="CENTER">
+                        <Button fx:id="nextButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleNextAction" textAlignment="CENTER" BorderPane.alignment="CENTER">
                            <padding>
                               <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                            </padding>
+                           <graphic>
+                              <ImageView pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@../images/ic_chevron_right_black_24dp.png" />
+                                 </image>
+                              </ImageView>
+                           </graphic>
+                           <tooltip>
+                              <Tooltip text="Next" />
+                           </tooltip>
                         </Button>
                      </right>
                      <bottom>
@@ -97,30 +102,70 @@
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </padding>
                               </TextField>
-                              <Button fx:id="editButton" focusTraversable="false" mnemonicParsing="false" onAction="#handleEditAction" text="Tag">
+                              <Button fx:id="editButton" focusTraversable="false" mnemonicParsing="false" onAction="#handleEditAction">
                                  <padding>
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </padding>
+                                 <graphic>
+                                    <ImageView pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/ic_book_black_18dp.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                                 <tooltip>
+                                    <Tooltip text="Tag" />
+                                 </tooltip>
                               </Button>
-                              <Button fx:id="saveButton" focusTraversable="false" mnemonicParsing="false" onAction="#handleSaveAction" text="Save">
+                              <Button fx:id="saveButton" focusTraversable="false" mnemonicParsing="false" onAction="#handleSaveAction">
                                  <padding>
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </padding>
+                                 <graphic>
+                                    <ImageView pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/ic_save_black_18dp.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                                 <tooltip>
+                                    <Tooltip text="Save" />
+                                 </tooltip>
                               </Button>
                               <Region nodeOrientation="LEFT_TO_RIGHT" HBox.hgrow="ALWAYS">
                                  <padding>
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </padding>
                               </Region>
-                              <Button fx:id="markerButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleFullScreenAction" text="Pen" textAlignment="CENTER">
+                              <Button fx:id="markerButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleFullScreenAction" textAlignment="CENTER">
                                  <padding>
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </padding>
+                                 <graphic>
+                                    <ImageView pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/ic_create_black_18dp.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                                 <tooltip>
+                                    <Tooltip text="Add Marker" />
+                                 </tooltip>
                               </Button>
-                              <Button fx:id="fullScreenButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleFullScreenAction" text="[ ]" textAlignment="CENTER">
+                              <Button fx:id="fullScreenButton" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleFullScreenAction" textAlignment="CENTER">
                                  <padding>
                                     <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                  </padding>
+                                 <graphic>
+                                    <ImageView pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../images/ic_fullscreen_black_18dp.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                                 <tooltip>
+                                    <Tooltip text="FullScreen" />
+                                 </tooltip>
                               </Button>
                            </children>
                         </HBox>
@@ -131,6 +176,23 @@
                      <padding>
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                      </padding>
+                     <left>
+                        <Button fx:id="nextButton1" alignment="CENTER" contentDisplay="CENTER" focusTraversable="false" mnemonicParsing="false" onAction="#handleNextAction" textAlignment="CENTER" BorderPane.alignment="CENTER">
+                           <padding>
+                              <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                           </padding>
+                           <graphic>
+                              <ImageView pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@../images/ic_chevron_left_black_24dp.png" />
+                                 </image>
+                              </ImageView>
+                           </graphic>
+                           <tooltip>
+                              <Tooltip text="Next" />
+                           </tooltip>
+                        </Button>
+                     </left>
                   </BorderPane>
                </children>
             </VBox>
