@@ -25,6 +25,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -50,11 +51,14 @@ public class ApplicationController implements Initializable{
     private boolean isModified;
     private HashMap<String, String> data; 
 
-    @FXML
-    private VBox root;
-    
+    @FXML // fx:id="root"
+    private VBox root; // Value injected by FXMLLoader
+
     @FXML // fx:id="listView"
     private ListView<String> listView; // Value injected by FXMLLoader
+
+    @FXML // fx:id="labelsButtonBar"
+    private ButtonBar labelsButtonBar; // Value injected by FXMLLoader
 
     @FXML // fx:id="previousButton"
     private Button previousButton; // Value injected by FXMLLoader
@@ -68,11 +72,17 @@ public class ApplicationController implements Initializable{
     @FXML // fx:id="EUNISClass"
     private TextField EUNISClass; // Value injected by FXMLLoader
 
+    @FXML // fx:id="obsTextField"
+    private TextField obsTextField; // Value injected by FXMLLoader
+
     @FXML // fx:id="editButton"
     private Button editButton; // Value injected by FXMLLoader
 
     @FXML // fx:id="saveButton"
     private Button saveButton; // Value injected by FXMLLoader
+
+    @FXML // fx:id="markerButton"
+    private Button markerButton; // Value injected by FXMLLoader
 
     @FXML // fx:id="fullScreenButton"
     private Button fullScreenButton; // Value injected by FXMLLoader
