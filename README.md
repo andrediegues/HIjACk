@@ -38,6 +38,7 @@ Just run the HIjACk.jar file in the HIjACk/dist/ folder with Oracle Java 8 Runti
 
 * [JavaFX](http://www.oracle.com/technetwork/java/javase/overview/javafx-overview-2158620.html)
 * [Scene Builder](http://gluonhq.com/products/scene-builder/) 
+* [Material Design Icons by Google](http://google.github.io/material-design-icons/)
 
 ## Authors
 
@@ -47,6 +48,6 @@ See also the list of [contributors](https://github.com/andrediegues/HIjACk/contr
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the Apache 2.0 License - see the [LICENSE.md](LICENSE.md) file for details
 
 
