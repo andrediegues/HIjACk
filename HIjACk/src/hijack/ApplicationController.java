@@ -230,13 +230,14 @@ public class ApplicationController implements Initializable{
             if(!classification.equals(data.get(filename))){
                 isModified = true;
                 data.put(filename, classification);
+                Image img = new Image("images/ic_done_black_48dp.png", true);
                 Notifications editNotification = Notifications.create()
                                         .text("Edited " + filename + " successfully")
                                         .hideAfter(Duration.seconds(3))
                                         .title("Edit")
-                                        .graphic(new ImageView("images/ic_done_black_48dp.png"))
+                                        .graphic(new ImageView(img))
                                         .position(Pos.TOP_RIGHT);
-                editNotification.showInformation();
+                editNotification.show();
             }
         }
     }
@@ -256,22 +257,24 @@ public class ApplicationController implements Initializable{
                     }
                 });
                 bw.close();
+                Image img = new Image("images/ic_done_black_48dp.png", true);
                 Notifications saveNotification = Notifications.create()
                                 .text("File was saved in " + logFile.getAbsolutePath())
                                 .hideAfter(Duration.seconds(3))
                                 .title("Save")
-                                .graphic(new ImageView("images/ic_done_black_48dp.png"))
+                                .graphic(new ImageView(img))
                                 .position(Pos.TOP_RIGHT);
-                saveNotification.showInformation();
+                saveNotification.show();
             }
             else{
+                Image img = new Image("images/ic_info_black_48dp.png", true);
                 Notifications saveNotification = Notifications.create()
                                 .text("Nothing to save")
                                 .hideAfter(Duration.seconds(3))
                                 .title("Save")
-                                .graphic(new ImageView("images/ic_info_black_48dp.png"))
+                                .graphic(new ImageView(img))
                                 .position(Pos.TOP_RIGHT);
-                saveNotification.showInformation();
+                saveNotification.show();
             }
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
