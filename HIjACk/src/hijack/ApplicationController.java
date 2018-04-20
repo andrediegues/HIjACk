@@ -50,6 +50,7 @@ public class ApplicationController implements Initializable{
     private boolean isModified;
     private HashMap<String, String> data; 
     private String lastEdition;
+    private String firstUnlabeledImage;
 
     @FXML // fx:id="root"
     private VBox root; // Value injected by FXMLLoader
@@ -314,7 +315,12 @@ public class ApplicationController implements Initializable{
         data = new HashMap<>();
         if(logFile == null){
             logFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + ".csv");
-            listOfNames.forEach((name) -> data.put(name, ""));
+            listOfNames.forEach((name) -> {
+                data.put(name, "");
+                if(firstUnlabeledImage == null){
+                    firstUnlabeledImage = name;
+                }
+            });
         }        
         else{
             try {
@@ -326,6 +332,9 @@ public class ApplicationController implements Initializable{
                     }
                     else{
                         data.put(line.split(",")[0], "");
+                        if(firstUnlabeledImage == null){
+                            firstUnlabeledImage = line.split(",")[0];
+                        }
                     }
                 }   
                 br.close();
@@ -334,6 +343,8 @@ public class ApplicationController implements Initializable{
             }
         }
         listView.getItems().addAll(listOfNames);
+        listView.getSelectionModel().select(firstUnlabeledImage);
+        loadImage(currentDir.getAbsolutePath() + "/" + firstUnlabeledImage);
         appStage.setOnCloseRequest((WindowEvent event) -> {
             exitWithUnsavedModifications();
         });
@@ -432,6 +443,4 @@ public class ApplicationController implements Initializable{
             return false;
         }
     }
-    
-    
 }
