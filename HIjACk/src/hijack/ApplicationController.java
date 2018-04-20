@@ -40,6 +40,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
+import javafx.util.Pair;
 import org.controlsfx.control.Notifications;
 
 public class ApplicationController implements Initializable{
@@ -48,7 +49,7 @@ public class ApplicationController implements Initializable{
     private File currentDir;
     private List<String> imageList;
     private boolean isModified;
-    private HashMap<String, String> data; 
+    private HashMap<String, Pair<String, String>> data; 
     private String lastEdition;
     private String firstUnlabeledImage;
 
@@ -230,13 +231,14 @@ public class ApplicationController implements Initializable{
         }
         else{
             lastEdition = classification;
+            String obs = obsTextField.getText();
             EUNISClass.setText(classification);
-            if(data.get(filename).equals(classification)){
+            if(data.get(filename).getKey().equals(classification)){
                 
             } 
             else {
                 isModified = true;
-                data.put(filename, classification);
+                data.put(filename, new Pair(classification, obs));
                 Image img = new Image("images/ic_done_black_48dp.png", true);
                 Notifications editNotification = Notifications.create()
                         .text("Edited " + filename + " successfully")
@@ -255,10 +257,10 @@ public class ApplicationController implements Initializable{
             if(isModified){
                 isModified = false;
                 BufferedWriter bw = new BufferedWriter(new FileWriter(logFile));
-                bw.write("filename, classificationValue\n");
-                data.forEach((String key, String value) -> {
+                bw.write("filename, classification, observations\n");
+                data.forEach((String key, Pair value) -> {
                     try {
-                        bw.write(key + "," + value + "\n");
+                        bw.write(key + "," + value.getKey() + "," + value.getValue() + "\n");
                     } catch (IOException ex) {
                         Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -316,7 +318,7 @@ public class ApplicationController implements Initializable{
         if(logFile == null){
             logFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + ".csv");
             listOfNames.forEach((name) -> {
-                data.put(name, "");
+                data.put(name, new Pair("", ""));
                 if(firstUnlabeledImage == null){
                     firstUnlabeledImage = name;
                 }
@@ -327,14 +329,17 @@ public class ApplicationController implements Initializable{
                 BufferedReader br = new BufferedReader(new FileReader(logFile));
                 String line = br.readLine();
                 while((line = br.readLine()) != null){
-                    if(line.split(",").length > 1){
-                        data.put(line.split(",")[0], line.split(",")[1]);
-                    }
-                    else{
-                        data.put(line.split(",")[0], "");
+                    if(line.split(",").length <= 1){
+                        data.put(line.split(",")[0], new Pair("", ""));
                         if(firstUnlabeledImage == null){
                             firstUnlabeledImage = line.split(",")[0];
                         }
+                    }
+                    else if(line.split(",").length <= 2){
+                        data.put(line.split(",")[0], new Pair(line.split(",")[1], ""));
+                    }
+                    else{
+                        data.put(line.split(",")[0], new Pair(line.split(",")[1], line.split(",")[2]));
                     }
                 }   
                 br.close();
@@ -364,7 +369,8 @@ public class ApplicationController implements Initializable{
         try {
             String[] names = pathOfImage.split("/");
             if(data.containsKey(names[names.length-1])){
-                EUNISClass.setText(data.get(names[names.length-1]));
+                EUNISClass.setText(data.get(names[names.length-1]).getKey());
+                obsTextField.setText(data.get(names[names.length-1]).getValue());
                 EUNISClass.setStyle("-fx-text-fill: black;");
             } 
             if(EUNISClass.getText().equals("")){
