@@ -49,6 +49,7 @@ public class ApplicationController implements Initializable{
     private List<String> imageList;
     private boolean isModified;
     private HashMap<String, String> data; 
+    private String lastEdition;
 
     @FXML // fx:id="root"
     private VBox root; // Value injected by FXMLLoader
@@ -70,6 +71,9 @@ public class ApplicationController implements Initializable{
 
     @FXML // fx:id="EUNISClass"
     private TextField EUNISClass; // Value injected by FXMLLoader
+
+    @FXML
+    private ImageView statusIcon;
 
     @FXML // fx:id="obsTextField"
     private TextField obsTextField; // Value injected by FXMLLoader
@@ -159,19 +163,24 @@ public class ApplicationController implements Initializable{
         if(character.equals(KeyCode.RIGHT) && index < imageList.size() - 1){
             listView.getSelectionModel().select(index + 1);
             name = listView.getSelectionModel().getSelectedItem();
+            listView.requestFocus();
         }
         else if(character.equals(KeyCode.DOWN) && index < imageList.size() - 1){
             name = imageList.get(index + 1);
+            listView.requestFocus();
         }
         else if(character.equals(KeyCode.LEFT) && index > 0){
             listView.getSelectionModel().select(index - 1);
             name = listView.getSelectionModel().getSelectedItem();
+            listView.requestFocus();
         }
         else if(character.equals(KeyCode.UP) && index > 0){
             name = imageList.get(index - 1);
+            listView.requestFocus();
         }
         else if(character.equals(KeyCode.ENTER)){
             handleEditAction(new ActionEvent());
+            listView.requestFocus();
         }
         else if(event.isControlDown() && character.equals(KeyCode.S)){
             handleSaveAction(new ActionEvent());
@@ -219,24 +228,21 @@ public class ApplicationController implements Initializable{
             alert.showAndWait();
         }
         else{
-            String s = classification.toUpperCase();
-            StringBuilder finalClass = new StringBuilder();
-            for(int i = 0; i < s.length(); i++){
-                if(s.charAt(i) != ' '){
-                    finalClass.append(s.charAt(i));
-                }
-            }
-            EUNISClass.setText(finalClass.toString());
-            if(!classification.equals(data.get(filename))){
+            lastEdition = classification;
+            EUNISClass.setText(classification);
+            if(data.get(filename).equals(classification)){
+                
+            } 
+            else {
                 isModified = true;
                 data.put(filename, classification);
                 Image img = new Image("images/ic_done_black_48dp.png", true);
                 Notifications editNotification = Notifications.create()
-                                        .text("Edited " + filename + " successfully")
-                                        .hideAfter(Duration.seconds(3))
-                                        .title("Edit")
-                                        .graphic(new ImageView(img))
-                                        .position(Pos.TOP_RIGHT);
+                        .text("Edited " + filename + " successfully")
+                        .hideAfter(Duration.seconds(3))
+                        .title("Edit")
+                        .graphic(new ImageView(img))
+                        .position(Pos.TOP_RIGHT);
                 editNotification.show();
             }
         }
@@ -348,8 +354,20 @@ public class ApplicationController implements Initializable{
             String[] names = pathOfImage.split("/");
             if(data.containsKey(names[names.length-1])){
                 EUNISClass.setText(data.get(names[names.length-1]));
-            } else {
-                EUNISClass.setText("");
+                EUNISClass.setStyle("-fx-text-fill: black;");
+            } 
+            if(EUNISClass.getText().equals("")){
+                //mudar a cor ou selecionar o texto para apagar
+                EUNISClass.setStyle("-fx-text-fill: red;");
+                Image img = new Image("images/ic_clear_black_18dp.png");
+                statusIcon.setImage(img);
+                EUNISClass.setText(lastEdition);
+                EUNISClass.requestFocus();
+                EUNISClass.selectAll();
+            }
+            else{
+                Image img = new Image("images/ic_done_black_18dp.png");
+                statusIcon.setImage(img);
             }
             File imagefile = new File(pathOfImage);
             Image image = new Image(imagefile.toURI().toURL().toString());
