@@ -68,7 +68,7 @@ public class AppLauncherController {
                 }
                 else{
                     s.close();
-                    listOfNames.sort((String o1, String o2) -> o1.toUpperCase().compareTo(o2.toUpperCase()));
+                    listOfNames.sort((String o1, String o2) -> o1.compareTo(o2));
                     System.out.println("Loading folder " + choice);
                     Stage application = new Stage();
                     appController.initData(application, choice, listOfNames);

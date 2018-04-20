@@ -9,10 +9,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Scanner;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.event.ActionEvent;
@@ -49,7 +50,7 @@ public class ApplicationController implements Initializable{
     private File currentDir;
     private List<String> imageList;
     private boolean isModified;
-    private HashMap<String, Pair<String, String>> data; 
+    private Map<String, Pair<String, String>> data; 
     private String lastEdition;
     private String firstUnlabeledImage;
 
@@ -94,7 +95,7 @@ public class ApplicationController implements Initializable{
 
     @FXML // fx:id="fileName"
     private Label fileName; // Value injected by FXMLLoader
-
+    
     @FXML
     void handleAboutAction(ActionEvent event) throws MalformedURLException {
         Alert about = new Alert(Alert.AlertType.NONE);
@@ -164,21 +165,19 @@ public class ApplicationController implements Initializable{
         int index = imageList.indexOf(name);
         if(character.equals(KeyCode.RIGHT) && index < imageList.size() - 1){
             listView.getSelectionModel().select(index + 1);
+            listView.scrollTo(index + 1);
             name = listView.getSelectionModel().getSelectedItem();
-            listView.requestFocus();
         }
-        else if(character.equals(KeyCode.DOWN) && index < imageList.size() - 1){
-            name = imageList.get(index + 1);
-            listView.requestFocus();
+        else if(character.equals(KeyCode.DOWN)){
+            event.consume();
         }
         else if(character.equals(KeyCode.LEFT) && index > 0){
             listView.getSelectionModel().select(index - 1);
+            listView.scrollTo(index - 1);            
             name = listView.getSelectionModel().getSelectedItem();
-            listView.requestFocus();
         }
-        else if(character.equals(KeyCode.UP) && index > 0){
-            name = imageList.get(index - 1);
-            listView.requestFocus();
+        else if(character.equals(KeyCode.UP)){
+            event.consume();
         }
         else if(character.equals(KeyCode.ENTER)){
             handleEditAction(new ActionEvent());
@@ -230,14 +229,17 @@ public class ApplicationController implements Initializable{
             alert.showAndWait();
         }
         else{
-            lastEdition = classification;
+            if(!classification.equals("")){
+                lastEdition = classification;
+            }
             String obs = obsTextField.getText();
             EUNISClass.setText(classification);
-            if(data.get(filename).getKey().equals(classification)){
-                
+            obsTextField.setText(obs);            
+            if(data.get(filename).getKey().equals(classification) && data.get(filename).getValue().equals(obs)){
             } 
             else {
                 isModified = true;
+                obsTextField.setText(obs);
                 data.put(filename, new Pair(classification, obs));
                 Image img = new Image("images/ic_done_black_48dp.png", true);
                 Notifications editNotification = Notifications.create()
@@ -260,6 +262,7 @@ public class ApplicationController implements Initializable{
                 bw.write("filename, classification, observations\n");
                 data.forEach((String key, Pair value) -> {
                     try {
+                        System.out.println(key + " " + value.toString());
                         bw.write(key + "," + value.getKey() + "," + value.getValue() + "\n");
                     } catch (IOException ex) {
                         Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
@@ -314,7 +317,7 @@ public class ApplicationController implements Initializable{
         imageList = listOfNames;
         isModified = false;
         editButton.setDisable(true);
-        data = new HashMap<>();
+        data = new TreeMap<>();
         if(logFile == null){
             logFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + ".csv");
             listOfNames.forEach((name) -> {
@@ -349,6 +352,7 @@ public class ApplicationController implements Initializable{
         }
         listView.getItems().addAll(listOfNames);
         listView.getSelectionModel().select(firstUnlabeledImage);
+        listView.scrollTo(firstUnlabeledImage);
         loadImage(currentDir.getAbsolutePath() + "/" + firstUnlabeledImage);
         appStage.setOnCloseRequest((WindowEvent event) -> {
             exitWithUnsavedModifications();
@@ -374,13 +378,17 @@ public class ApplicationController implements Initializable{
                 EUNISClass.setStyle("-fx-text-fill: black;");
             } 
             if(EUNISClass.getText().equals("")){
-                //mudar a cor ou selecionar o texto para apagar
                 EUNISClass.setStyle("-fx-text-fill: red;");
                 Image img = new Image("images/ic_clear_black_18dp.png");
                 statusIcon.setImage(img);
-                EUNISClass.setText(lastEdition);
-                EUNISClass.requestFocus();
-                EUNISClass.selectAll();
+                if(lastEdition == null){
+                    listView.requestFocus();
+                }
+                else{                    
+                    EUNISClass.setText(lastEdition);
+                    EUNISClass.requestFocus();
+                    EUNISClass.selectAll();
+                }
             }
             else{
                 Image img = new Image("images/ic_done_black_18dp.png");
