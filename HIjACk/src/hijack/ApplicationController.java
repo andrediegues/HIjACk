@@ -163,12 +163,43 @@ public class ApplicationController implements Initializable{
         String name = listView.getSelectionModel().getSelectedItem();
         KeyCode character = event.getCode();
         int index = imageList.indexOf(name);
-        if(character.equals(KeyCode.RIGHT) && index < imageList.size() - 1){
+        if(event.isControlDown()){
+            switch (character) {
+                case S:
+                    handleSaveAction(new ActionEvent());
+                    break;
+                case LEFT:
+                    System.out.println("ctrl+left");
+                    if(index > 10){
+                        listView.getSelectionModel().select(index - 10);
+                        listView.scrollTo(index - 10);
+                    }
+                    else{
+                        listView.getSelectionModel().select(0);
+                        listView.scrollTo(0);
+                    }   name = listView.getSelectionModel().getSelectedItem();
+                    break;
+                case RIGHT:
+                    System.out.println("ctrl+right");
+                    if(index < imageList.size() - 10){
+                        listView.getSelectionModel().select(index + 10);
+                        listView.scrollTo(index + 10);
+                    }
+                    else{
+                        listView.getSelectionModel().select(imageList.size() - 1);
+                        listView.scrollTo(imageList.size() - 1);
+                    }   name = listView.getSelectionModel().getSelectedItem();
+                    break;
+                default:
+                    break;
+            }
+        }
+        else if(character.equals(KeyCode.RIGHT) && index < imageList.size() - 1){
             listView.getSelectionModel().select(index + 1);
             listView.scrollTo(index + 1);
             name = listView.getSelectionModel().getSelectedItem();
         }
-        else if(character.equals(KeyCode.DOWN)){
+        else if(character.equals(KeyCode.DOWN) || character.equals(KeyCode.UP)){
             event.consume();
         }
         else if(character.equals(KeyCode.LEFT) && index > 0){
@@ -176,15 +207,9 @@ public class ApplicationController implements Initializable{
             listView.scrollTo(index - 1);            
             name = listView.getSelectionModel().getSelectedItem();
         }
-        else if(character.equals(KeyCode.UP)){
-            event.consume();
-        }
         else if(character.equals(KeyCode.ENTER)){
             handleEditAction(new ActionEvent());
             listView.requestFocus();
-        }
-        else if(event.isControlDown() && character.equals(KeyCode.S)){
-            handleSaveAction(new ActionEvent());
         }
         else{
             return;
