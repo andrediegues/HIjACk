@@ -3,6 +3,7 @@ package hijack;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,7 +69,13 @@ public class AppLauncherController {
                 }
                 else{
                     s.close();
-                    listOfNames.sort((String o1, String o2) -> o1.compareTo(o2));
+                    listOfNames.sort((String o1, String o2) -> {
+                        int c = o1.length() - o2.length();
+                        if(c == 0){
+                            c = o1.compareTo(o2);
+                        }
+                        return c;
+                    });
                     System.out.println("Loading folder " + choice);
                     Stage application = new Stage();
                     appController.initData(application, choice, listOfNames);

@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -25,7 +26,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -43,25 +43,28 @@ import javafx.stage.WindowEvent;
 import javafx.util.Duration;
 import javafx.util.Pair;
 import org.controlsfx.control.Notifications;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 
 public class ApplicationController implements Initializable{
     
     private File logFile;
+    private File targetsFile;
     private File currentDir;
     private List<String> imageList;
     private boolean isModified;
     private Map<String, Pair<String, String>> data; 
     private String lastEdition;
     private String firstUnlabeledImage;
+    private CSVParser csvParser;
+    private List<CSVRecord> records;
 
     @FXML // fx:id="root"
     private VBox root; // Value injected by FXMLLoader
 
     @FXML // fx:id="listView"
     private ListView<String> listView; // Value injected by FXMLLoader
-
-    @FXML // fx:id="labelsButtonBar"
-    private ButtonBar labelsButtonBar; // Value injected by FXMLLoader
 
     @FXML // fx:id="previousButton"
     private Button previousButton; // Value injected by FXMLLoader
@@ -87,14 +90,20 @@ public class ApplicationController implements Initializable{
     @FXML // fx:id="saveButton"
     private Button saveButton; // Value injected by FXMLLoader
 
-    @FXML // fx:id="markerButton"
-    private Button markerButton; // Value injected by FXMLLoader
-
     @FXML // fx:id="fullScreenButton"
     private Button fullScreenButton; // Value injected by FXMLLoader
 
     @FXML // fx:id="fileName"
     private Label fileName; // Value injected by FXMLLoader
+    
+    @FXML
+    private Label longitude;
+
+    @FXML
+    private Label latitude;
+
+    @FXML
+    private Label depth;
     
     @FXML
     void handleAboutAction(ActionEvent event) throws MalformedURLException {
@@ -153,8 +162,8 @@ public class ApplicationController implements Initializable{
             editButton.setDisable(true);
             return;
         }
-        loadImage(currentDir + "/" + listView.getSelectionModel().getSelectedItem());
-        fileName.setText(listView.getSelectionModel().getSelectedItem());
+        loadImage(currentDir + "/" + listView.getSelectionModel().getSelectedItem(), listView.getSelectionModel().getSelectedItem());
+        //fileName.setText(listView.getSelectionModel().getSelectedItem());
     }
     
     @FXML
@@ -217,19 +226,19 @@ public class ApplicationController implements Initializable{
         if(!listView.isVisible()){
             listView.scrollTo(index);
         }
-        fileName.setText(name);
+        //fileName.setText(name);
         String pathOfImage = currentDir.getAbsolutePath() + "/" + name;
-        loadImage(pathOfImage);
+        loadImage(pathOfImage, name);
     }
 
     @FXML
     void handleNextAction(ActionEvent event) {
-        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.RIGHT, true, true, true, true));
+        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.RIGHT, false, false, false, false));
     }
     
     @FXML
     void handlePreviousAction(ActionEvent event) {
-        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.LEFT, true, true, true, true));
+        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.LEFT, false, false, false, false));
     }   
     
     @FXML
@@ -283,7 +292,7 @@ public class ApplicationController implements Initializable{
         try {
             if(isModified){
                 isModified = false;
-                BufferedWriter bw = new BufferedWriter(new FileWriter(logFile));
+                BufferedWriter bw = new BufferedWriter(new FileWriter(targetsFile));
                 bw.write("filename, classification, observations\n");
                 data.forEach((String key, Pair value) -> {
                     try {
@@ -296,7 +305,7 @@ public class ApplicationController implements Initializable{
                 bw.close();
                 Image img = new Image("images/ic_done_black_48dp.png", true);
                 Notifications saveNotification = Notifications.create()
-                                .text("File was saved in " + logFile.getAbsolutePath())
+                                .text("File was saved in " + targetsFile.getAbsolutePath())
                                 .hideAfter(Duration.seconds(3))
                                 .title("Save")
                                 .graphic(new ImageView(img))
@@ -336,15 +345,24 @@ public class ApplicationController implements Initializable{
         }
     }
 
-    void initData(Stage appStage, File choice, List<String> listOfNames) throws FileNotFoundException {
+    void initData(Stage appStage, File choice, List<String> listOfNames) throws FileNotFoundException, IOException {
         currentDir = choice;
-        logFile = checkExistingLog(choice);
+        logFile = checkExistingLog(choice, choice.getName() + ".csv");
+        targetsFile = checkExistingLog(choice, choice.getName() + "-targets.csv");
         imageList = listOfNames;
         isModified = false;
         editButton.setDisable(true);
         data = new TreeMap<>();
-        if(logFile == null){
-            logFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + ".csv");
+        if(logFile != null){
+            Reader in = new FileReader(logFile);
+            csvParser = new CSVParser(new BufferedReader(in), CSVFormat.DEFAULT
+            .withFirstRecordAsHeader()
+            .withIgnoreHeaderCase()
+            .withTrim());
+            records = csvParser.getRecords();
+        }
+        if(targetsFile == null){
+            targetsFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + "-targets.csv");
             listOfNames.forEach((name) -> {
                 data.put(name, new Pair("", ""));
                 if(firstUnlabeledImage == null){
@@ -354,7 +372,7 @@ public class ApplicationController implements Initializable{
         }        
         else{
             try {
-                BufferedReader br = new BufferedReader(new FileReader(logFile));
+                BufferedReader br = new BufferedReader(new FileReader(targetsFile));
                 String line = br.readLine();
                 while((line = br.readLine()) != null){
                     if(line.split(",").length <= 1){
@@ -378,28 +396,29 @@ public class ApplicationController implements Initializable{
         listView.getItems().addAll(listOfNames);
         listView.getSelectionModel().select(firstUnlabeledImage);
         listView.scrollTo(firstUnlabeledImage);
-        loadImage(currentDir.getAbsolutePath() + "/" + firstUnlabeledImage);
+        //fileName.setText(firstUnlabeledImage);
+        
+        loadImage(currentDir.getAbsolutePath() + "/" + firstUnlabeledImage, firstUnlabeledImage);
         appStage.setOnCloseRequest((WindowEvent event) -> {
             exitWithUnsavedModifications();
         });
     }
      
-    private File checkExistingLog(File file){
+    private File checkExistingLog(File file, String name){
         File[] files = file.listFiles();
         for(File f: files){
-            if(f.getName().equals(file.getName() + ".csv")){
+            if(f.getName().equals(name)){
                 return f;
             }
         }
         return null;
     }
 
-    private void loadImage(String pathOfImage) {
+    private void loadImage(String pathOfImage, String filename) {
         try {
-            String[] names = pathOfImage.split("/");
-            if(data.containsKey(names[names.length-1])){
-                EUNISClass.setText(data.get(names[names.length-1]).getKey());
-                obsTextField.setText(data.get(names[names.length-1]).getValue());
+            if(data.containsKey(filename)){
+                EUNISClass.setText(data.get(filename).getKey());
+                obsTextField.setText(data.get(filename).getValue());
                 EUNISClass.setStyle("-fx-text-fill: black;");
             } 
             if(EUNISClass.getText().equals("")){
@@ -422,6 +441,14 @@ public class ApplicationController implements Initializable{
             File imagefile = new File(pathOfImage);
             Image image = new Image(imagefile.toURI().toURL().toString());
             imageView.setImage(image);
+            fileName.setText("Image: " + filename);
+            if(logFile != null){
+                CSVRecord record = records.get(imageList.indexOf(filename));
+                //System.out.println(filename + " ---- with record: " + record.get("filename"));
+                longitude.setText("Lon: " + record.get("longitude") + "\u00B0");
+                latitude.setText("Lat: " + record.get("latitude") + "\u00B0");
+                depth.setText("Target Depth: " + Double.toString(Double.valueOf(record.get("depth")) + Double.valueOf(record.get("altitude"))) + "m");
+            }
         } catch (MalformedURLException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }

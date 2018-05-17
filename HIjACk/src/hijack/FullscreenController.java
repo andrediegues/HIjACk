@@ -8,8 +8,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.Screen;
 
 /**
  * FXML Controller class
@@ -37,6 +39,13 @@ public class FullscreenController implements Initializable {
             Image image = new Image(imagefile.toURI().toURL().toString());
             double width = image.getWidth();
             double height = image.getHeight();
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+            if(bounds.getHeight() < height){
+                height = bounds.getHeight();
+            }
+            if(bounds.getWidth()< width){
+                width = bounds.getWidth();
+            }
             fullScreenImageView.setFitWidth(width);
             fullScreenImageView.setFitHeight(height);
             fullScreenImageView.setImage(image);
