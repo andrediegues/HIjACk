@@ -29,13 +29,17 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -56,46 +60,41 @@ public class ApplicationController implements Initializable{
     private boolean isModified;
     private Map<String, Pair<String, String>> data; 
     private String lastEdition;
-    private String firstUnlabeledImage;
+    private String firstImage;
     private CSVParser csvParser;
     private List<CSVRecord> records;
+    private int index;
 
-    @FXML // fx:id="root"
-    private VBox root; // Value injected by FXMLLoader
+    @FXML
+    private VBox root;
 
-    @FXML // fx:id="listView"
-    private ListView<String> listView; // Value injected by FXMLLoader
+    @FXML
+    private Button nextButton;
 
-    @FXML // fx:id="previousButton"
-    private Button previousButton; // Value injected by FXMLLoader
+    @FXML
+    private TextField EUNISClass;
 
-    @FXML // fx:id="imageView"
-    private ImageView imageView; // Value injected by FXMLLoader
-
-    @FXML // fx:id="nextButton"
-    private Button nextButton; // Value injected by FXMLLoader
-
-    @FXML // fx:id="EUNISClass"
-    private TextField EUNISClass; // Value injected by FXMLLoader
+    @FXML
+    private TextField obsTextField;
 
     @FXML
     private ImageView statusIcon;
 
-    @FXML // fx:id="obsTextField"
-    private TextField obsTextField; // Value injected by FXMLLoader
+    @FXML
+    private Button editButton;
 
-    @FXML // fx:id="editButton"
-    private Button editButton; // Value injected by FXMLLoader
+    @FXML
+    private Button saveButton;
 
-    @FXML // fx:id="saveButton"
-    private Button saveButton; // Value injected by FXMLLoader
+    @FXML
+    private Button fullScreenButton;
 
-    @FXML // fx:id="fullScreenButton"
-    private Button fullScreenButton; // Value injected by FXMLLoader
+    @FXML
+    private Button previousButton;
 
-    @FXML // fx:id="fileName"
-    private Label fileName; // Value injected by FXMLLoader
-    
+    @FXML
+    private Label fileName;
+
     @FXML
     private Label longitude;
 
@@ -106,12 +105,33 @@ public class ApplicationController implements Initializable{
     private Label depth;
     
     @FXML
+    private Region imageRegion;
+    
+    @FXML
+    private Label imageIndex;
+    
+    @FXML
     void handleAboutAction(ActionEvent event) throws MalformedURLException {
         Alert about = new Alert(Alert.AlertType.NONE);
         about.setTitle("About HIjACK");
         about.getButtonTypes().add(ButtonType.OK);
         about.setGraphic(new Hyperlink("https://github.com/andrediegues/HIjACk"));        
         about.showAndWait();
+    }
+    
+    @FXML
+    void handleShortcutsAction(ActionEvent event) {
+        FXMLLoader shortcuts = new FXMLLoader(getClass().getResource("shortcut.fxml"));
+        try {
+            Parent sc = shortcuts.load();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(sc));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Help - Shortcuts");
+            stage.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(ShortcutController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @FXML
@@ -154,79 +174,56 @@ public class ApplicationController implements Initializable{
         Stage currentStage = (Stage) root.getScene().getWindow();
         currentStage.close();
     }
-
-    @FXML
-    void handleFilesClick(MouseEvent event) {
-        editButton.setDisable(false);
-        if(listView.getSelectionModel().getSelectedItem() == null){
-            editButton.setDisable(true);
-            return;
-        }
-        loadImage(currentDir + "/" + listView.getSelectionModel().getSelectedItem(), listView.getSelectionModel().getSelectedItem());
-        //fileName.setText(listView.getSelectionModel().getSelectedItem());
-    }
     
     @FXML
     void handleKeyPress(KeyEvent event) {
         editButton.setDisable(false);
-        String name = listView.getSelectionModel().getSelectedItem();
+        String name = imageList.get(index);
         KeyCode character = event.getCode();
-        int index = imageList.indexOf(name);
+        //int index = imageList.indexOf(name);
         if(event.isControlDown()){
             switch (character) {
                 case S:
                     handleSaveAction(new ActionEvent());
                     break;
                 case LEFT:
-                    System.out.println("ctrl+left");
                     if(index > 10){
-                        listView.getSelectionModel().select(index - 10);
-                        listView.scrollTo(index - 10);
+                        name = imageList.get(index - 10);
+                        index -= 10;
                     }
                     else{
-                        listView.getSelectionModel().select(0);
-                        listView.scrollTo(0);
-                    }   name = listView.getSelectionModel().getSelectedItem();
+                        name = imageList.get(0);
+                        index = 0;
+                    }   
                     break;
                 case RIGHT:
-                    System.out.println("ctrl+right");
                     if(index < imageList.size() - 10){
-                        listView.getSelectionModel().select(index + 10);
-                        listView.scrollTo(index + 10);
+                        name = imageList.get(index + 10);
+                        index += 10;
                     }
-                    else{
-                        listView.getSelectionModel().select(imageList.size() - 1);
-                        listView.scrollTo(imageList.size() - 1);
-                    }   name = listView.getSelectionModel().getSelectedItem();
+                    else{                        
+                        name = imageList.get(imageList.size() - 1);
+                        index = imageList.size() - 1;
+                    }   
                     break;
                 default:
                     break;
             }
         }
         else if(character.equals(KeyCode.RIGHT) && index < imageList.size() - 1){
-            listView.getSelectionModel().select(index + 1);
-            listView.scrollTo(index + 1);
-            name = listView.getSelectionModel().getSelectedItem();
+            name = imageList.get(index + 1);
+            index++;
         }
-        else if(character.equals(KeyCode.DOWN) || character.equals(KeyCode.UP)){
-            event.consume();
-        }
-        else if(character.equals(KeyCode.LEFT) && index > 0){
-            listView.getSelectionModel().select(index - 1);
-            listView.scrollTo(index - 1);            
-            name = listView.getSelectionModel().getSelectedItem();
+        else if(character.equals(KeyCode.LEFT) && index > 0){          
+            name = imageList.get(index - 1);
+            index--;
         }
         else if(character.equals(KeyCode.ENTER)){
             handleEditAction(new ActionEvent());
-            listView.requestFocus();
         }
         else{
             return;
         }
-        if(!listView.isVisible()){
-            listView.scrollTo(index);
-        }
-        //fileName.setText(name);
         String pathOfImage = currentDir.getAbsolutePath() + "/" + name;
         loadImage(pathOfImage, name);
     }
@@ -243,7 +240,7 @@ public class ApplicationController implements Initializable{
     
     @FXML
     void handleEditAction(ActionEvent event) {
-        String filename = listView.getSelectionModel().getSelectedItem();
+        String filename = imageList.get(index);
         if(filename == null){
             return;
         }
@@ -263,17 +260,12 @@ public class ApplicationController implements Initializable{
             alert.showAndWait();
         }
         else{
-            if(!classification.equals("")){
-                lastEdition = classification;
-            }
-            String obs = obsTextField.getText();
-            EUNISClass.setText(classification);
-            obsTextField.setText(obs);            
-            if(data.get(filename).getKey().equals(classification) && data.get(filename).getValue().equals(obs)){
-            } 
-            else {
+            lastEdition = classification;
+            String obs = obsTextField.getText();           
+            if(!data.get(filename).getKey().equals(classification) || !data.get(filename).getValue().equals(obs)){
                 isModified = true;
-                obsTextField.setText(obs);
+                EUNISClass.setText(classification);
+                obsTextField.setText(obs); 
                 data.put(filename, new Pair(classification, obs));
                 Image img = new Image("images/ic_done_black_48dp.png", true);
                 Notifications editNotification = Notifications.create()
@@ -334,11 +326,11 @@ public class ApplicationController implements Initializable{
             FXMLLoader fsImage = new FXMLLoader(getClass().getResource("fullscreen.fxml"));
             Parent fsRoot = fsImage.load();
             FullscreenController fsController = fsImage.getController();
-            fsController.addImageToImageView(currentDir + "/" + listView.getSelectionModel().getSelectedItem());
+            fsController.addImageToImageView(currentDir + "/" + imageList.get(index));
             Stage fsStage = new Stage();
             fsStage.setScene(new Scene(fsRoot));
             fsStage.initModality(Modality.APPLICATION_MODAL);
-            fsStage.setTitle(listView.getSelectionModel().getSelectedItem());
+            fsStage.setTitle(imageList.get(index));
             fsStage.showAndWait();
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
@@ -365,8 +357,9 @@ public class ApplicationController implements Initializable{
             targetsFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + "-targets.csv");
             listOfNames.forEach((name) -> {
                 data.put(name, new Pair("", ""));
-                if(firstUnlabeledImage == null){
-                    firstUnlabeledImage = name;
+                if(firstImage == null){
+                    firstImage = name;
+                    index = imageList.indexOf(firstImage);
                 }
             });
         }        
@@ -377,8 +370,9 @@ public class ApplicationController implements Initializable{
                 while((line = br.readLine()) != null){
                     if(line.split(",").length <= 1){
                         data.put(line.split(",")[0], new Pair("", ""));
-                        if(firstUnlabeledImage == null){
-                            firstUnlabeledImage = line.split(",")[0];
+                        if(firstImage == null){
+                            firstImage = line.split(",")[0];
+                            index = imageList.indexOf(firstImage);
                         }
                     }
                     else if(line.split(",").length <= 2){
@@ -393,12 +387,12 @@ public class ApplicationController implements Initializable{
                 Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        listView.getItems().addAll(listOfNames);
-        listView.getSelectionModel().select(firstUnlabeledImage);
-        listView.scrollTo(firstUnlabeledImage);
-        //fileName.setText(firstUnlabeledImage);
-        
-        loadImage(currentDir.getAbsolutePath() + "/" + firstUnlabeledImage, firstUnlabeledImage);
+        if(firstImage == null){
+            index = 0;
+            firstImage = imageList.get(index);
+        }
+        System.out.println("first is null? " +  firstImage);
+        loadImage(currentDir.getAbsolutePath() + "/" + firstImage, firstImage);
         appStage.setOnCloseRequest((WindowEvent event) -> {
             exitWithUnsavedModifications();
         });
@@ -425,10 +419,7 @@ public class ApplicationController implements Initializable{
                 EUNISClass.setStyle("-fx-text-fill: red;");
                 Image img = new Image("images/ic_clear_black_18dp.png");
                 statusIcon.setImage(img);
-                if(lastEdition == null){
-                    listView.requestFocus();
-                }
-                else{                    
+                if(lastEdition != null){                    
                     EUNISClass.setText(lastEdition);
                     EUNISClass.requestFocus();
                     EUNISClass.selectAll();
@@ -440,7 +431,7 @@ public class ApplicationController implements Initializable{
             }
             File imagefile = new File(pathOfImage);
             Image image = new Image(imagefile.toURI().toURL().toString());
-            imageView.setImage(image);
+            imageRegion.setBackground(new Background(new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, true, false))));
             fileName.setText("Image: " + filename);
             if(logFile != null){
                 CSVRecord record = records.get(imageList.indexOf(filename));
@@ -449,6 +440,8 @@ public class ApplicationController implements Initializable{
                 latitude.setText("Lat: " + record.get("latitude") + "\u00B0");
                 depth.setText("Target Depth: " + Double.toString(Double.valueOf(record.get("depth")) + Double.valueOf(record.get("altitude"))) + "m");
             }
+            imageIndex.setText((index + 1) + "/" + imageList.size());
+            EUNISClass.requestFocus();
         } catch (MalformedURLException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -488,6 +481,20 @@ public class ApplicationController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("Application initialized");
+        assert root != null : "fx:id=\"root\" was not injected: check your FXML file 'application.fxml'.";
+        assert nextButton != null : "fx:id=\"nextButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert EUNISClass != null : "fx:id=\"EUNISClass\" was not injected: check your FXML file 'application.fxml'.";
+        assert obsTextField != null : "fx:id=\"obsTextField\" was not injected: check your FXML file 'application.fxml'.";
+        assert statusIcon != null : "fx:id=\"statusIcon\" was not injected: check your FXML file 'application.fxml'.";
+        assert editButton != null : "fx:id=\"editButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert fullScreenButton != null : "fx:id=\"fullScreenButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert previousButton != null : "fx:id=\"previousButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";
+        assert longitude != null : "fx:id=\"longitude\" was not injected: check your FXML file 'application.fxml'.";
+        assert latitude != null : "fx:id=\"latitude\" was not injected: check your FXML file 'application.fxml'.";
+        assert depth != null : "fx:id=\"depth\" was not injected: check your FXML file 'application.fxml'.";
+        assert imageRegion != null : "fx:id=\"imageRegion\" was not injected: check your FXML file 'application.fxml'.";
     }
 
     private boolean exitWithUnsavedModifications() {
