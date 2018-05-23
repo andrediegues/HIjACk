@@ -23,11 +23,7 @@ public class FullscreenController implements Initializable {
     
     @FXML
     private ImageView fullScreenImageView;
-    /**
-     * Initializes the controller class.
-     * @param url
-     * @param rb
-     */
+    
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         assert fullScreenImageView != null : "fx:id=\"fullScreenImageView\" was not injected: check your FXML file 'fullscreen.fxml'.";
