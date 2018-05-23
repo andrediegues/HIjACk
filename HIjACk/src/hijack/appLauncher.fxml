@@ -9,7 +9,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox fx:id="vbox" alignment="TOP_CENTER" prefHeight="200.0" prefWidth="400.0" spacing="30.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.AppLauncherController">
+<VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="400.0" spacing="30.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.AppLauncherController">
    <children>
       <MenuBar style="-fx-font: 10pt &quot;Monospaced&quot;;">
         <menus>
@@ -21,7 +21,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
-              <MenuItem mnemonicParsing="false" onAction="#handleHelpAction" text="About" />
+              <MenuItem mnemonicParsing="false" onAction="#handleHelpAction" text="About..." />
             </items>
           </Menu>
         </menus>
