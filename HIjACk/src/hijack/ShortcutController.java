@@ -48,11 +48,11 @@ public class ShortcutController {
         assert description != null : "fx:id=\"description\" was not injected: check your FXML file 'shortcut.fxml'.";
         
         final Shortcut save = new Shortcut("Ctrl + s", "Save the file.");
-        final Shortcut nextPhoto = new Shortcut("Right Arrow", "Display the next photo.");
-        final Shortcut previousPhoto = new Shortcut("Left Arrow", "Display the previous photo.");
+        final Shortcut nextPhoto = new Shortcut("\u2193", "Display the next photo.");
+        final Shortcut previousPhoto = new Shortcut("\u2191", "Display the previous photo.");
         final Shortcut tag = new Shortcut("Enter", "Tag the current photo with the annotation written.");
-        final Shortcut next10Photos = new Shortcut("Ctrl + Right Arrow", "Display the photo 10 positions ahead.");
-        final Shortcut previous10Photos = new Shortcut("Ctrl + Left Arrow", "Display the photo 10 positions behind.");
+        final Shortcut next10Photos = new Shortcut("Ctrl + \u2193", "Display the photo 10 positions ahead.");
+        final Shortcut previous10Photos = new Shortcut("Ctrl + \u2191", "Display the photo 10 positions behind.");
         
         shortcut.setCellValueFactory(new PropertyValueFactory("shortCut"));        
         description.setCellValueFactory(new PropertyValueFactory("descr"));
