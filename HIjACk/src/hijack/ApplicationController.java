@@ -26,6 +26,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
@@ -40,7 +41,6 @@ import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -64,9 +64,6 @@ public class ApplicationController implements Initializable{
     private CSVParser csvParser;
     private List<CSVRecord> records;
     private int index;
-
-    @FXML
-    private VBox root;
 
     @FXML
     private Button nextButton;
@@ -112,10 +109,7 @@ public class ApplicationController implements Initializable{
     
     @FXML
     void handleAboutAction(ActionEvent event) throws MalformedURLException {
-        Alert about = new Alert(Alert.AlertType.NONE);
-        about.setTitle("About HIjACK");
-        about.getButtonTypes().add(ButtonType.OK);
-        about.setGraphic(new Hyperlink("https://github.com/andrediegues/HIjACk"));        
+        Alert about = HIjACk.createAlert(Alert.AlertType.NONE, "About HIjACK", "", new Hyperlink("https://github.com/andrediegues/HIjACk"), new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE));
         about.showAndWait();
     }
     
@@ -137,7 +131,7 @@ public class ApplicationController implements Initializable{
     @FXML
     void handleOpenAction(ActionEvent event) { 
         try {
-            Stage currentStage = (Stage) root.getScene().getWindow();
+            Stage currentStage = HIjACk.getCurrentStage();
             FXMLLoader appLauncher = new FXMLLoader(getClass().getResource("appLauncher.fxml"));
             appLauncher.load();
             AppLauncherController appLauncherController = appLauncher.getController();
@@ -149,11 +143,11 @@ public class ApplicationController implements Initializable{
     }
     @FXML
     void handleCloseAction(ActionEvent event) {
-        try {            
-            if(!exitWithUnsavedModifications()){
-                return;
-            }
-            Stage currentStage = (Stage) root.getScene().getWindow();
+        if(!exitWithUnsavedModifications()){
+            return;
+        }  
+        try {       
+            Stage currentStage = HIjACk.getCurrentStage();
             currentStage.close();
             Parent appLauncher = FXMLLoader.load(getClass().getResource("appLauncher.fxml"));
             Stage newStage = new Stage();
@@ -161,6 +155,7 @@ public class ApplicationController implements Initializable{
             newStage.setScene(launcher);
             newStage.setTitle("HIjACk");
             newStage.show();
+            HIjACk.setCurrentStage(newStage);
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -171,7 +166,7 @@ public class ApplicationController implements Initializable{
         if(!exitWithUnsavedModifications()){
             return;
         }        
-        Stage currentStage = (Stage) root.getScene().getWindow();
+        Stage currentStage = HIjACk.getCurrentStage();
         currentStage.close();
     }
     
@@ -180,13 +175,12 @@ public class ApplicationController implements Initializable{
         editButton.setDisable(false);
         String name = imageList.get(index);
         KeyCode character = event.getCode();
-        //int index = imageList.indexOf(name);
         if(event.isControlDown()){
             switch (character) {
                 case S:
                     handleSaveAction(new ActionEvent());
                     break;
-                case LEFT:
+                case UP:
                     if(index > 10){
                         name = imageList.get(index - 10);
                         index -= 10;
@@ -195,8 +189,9 @@ public class ApplicationController implements Initializable{
                         name = imageList.get(0);
                         index = 0;
                     }   
+                    event.consume();
                     break;
-                case RIGHT:
+                case DOWN:
                     if(index < imageList.size() - 10){
                         name = imageList.get(index + 10);
                         index += 10;
@@ -205,21 +200,28 @@ public class ApplicationController implements Initializable{
                         name = imageList.get(imageList.size() - 1);
                         index = imageList.size() - 1;
                     }   
+                    event.consume();
                     break;
                 default:
                     break;
             }
         }
-        else if(character.equals(KeyCode.RIGHT) && index < imageList.size() - 1){
+        else if(character.equals(KeyCode.DOWN) && index < imageList.size() - 1){
             name = imageList.get(index + 1);
             index++;
+            event.consume();
         }
-        else if(character.equals(KeyCode.LEFT) && index > 0){          
+        else if(character.equals(KeyCode.UP) && index > 0){          
             name = imageList.get(index - 1);
             index--;
+            event.consume();
         }
         else if(character.equals(KeyCode.ENTER)){
             handleEditAction(new ActionEvent());
+            EUNISClass.setStyle("-fx-text-fill: black;");
+            Image img = new Image("images/ic_done_black_18dp.png");
+            statusIcon.setImage(img);
+            return;
         }
         else{
             return;
@@ -230,50 +232,41 @@ public class ApplicationController implements Initializable{
 
     @FXML
     void handleNextAction(ActionEvent event) {
-        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.RIGHT, false, false, false, false));
+        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false));
     }
     
     @FXML
     void handlePreviousAction(ActionEvent event) {
-        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.LEFT, false, false, false, false));
+        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.UP, false, false, false, false));
     }   
     
     @FXML
     void handleEditAction(ActionEvent event) {
         String filename = imageList.get(index);
-        if(filename == null){
-            return;
-        }
         String classification = EUNISClass.getText().toUpperCase();
         if(classification.contains(" ")){
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please remove all blank spaces.", ButtonType.OK);
-            alert.setTitle(classification + " contains blank spaces!");
-            alert.setGraphic(new ImageView("images/ic_error_black_48dp.png"));
+            Alert whiteSpaces = HIjACk.createAlert(Alert.AlertType.NONE, classification + " contains blank spaces!", "Please remove all blank spaces.", 
+                    new ImageView("images/ic_error_black_48dp.png"), new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE));
+            whiteSpaces.showAndWait();
             classification = null;
-            alert.showAndWait();
         }
         else if(!isValid(classification)){
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please insert a valid classification.", ButtonType.OK);
-            alert.setTitle(classification + " is not a valid classification!");
-            alert.setGraphic(new ImageView("images/ic_error_black_48dp.png"));
+            Alert invalidClass = HIjACk.createAlert(Alert.AlertType.NONE, classification + " is not a valid classification!", "Please insert a valid classification.", 
+                    new ImageView("images/ic_error_black_48dp.png"), new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE));
+            invalidClass.showAndWait();
             classification = null;
-            alert.showAndWait();
         }
         else{
-            lastEdition = classification;
-            String obs = obsTextField.getText();           
+            if(!classification.isEmpty()){
+                lastEdition = classification;
+            }
+            EUNISClass.setText(classification);
+            String obs = obsTextField.getText();    
             if(!data.get(filename).getKey().equals(classification) || !data.get(filename).getValue().equals(obs)){
                 isModified = true;
-                EUNISClass.setText(classification);
-                obsTextField.setText(obs); 
                 data.put(filename, new Pair(classification, obs));
-                Image img = new Image("images/ic_done_black_48dp.png", true);
-                Notifications editNotification = Notifications.create()
-                        .text("Edited " + filename + " successfully")
-                        .hideAfter(Duration.seconds(3))
-                        .title("Edit")
-                        .graphic(new ImageView(img))
-                        .position(Pos.TOP_RIGHT);
+                Image img = new Image("images/ic_done_black_48dp.png");
+                Notifications editNotification = HIjACk.createNotification("Edited " + filename + " successfully", Duration.seconds(3), "Edit", new ImageView(img), Pos.TOP_RIGHT);
                 editNotification.show();
             }
         }
@@ -283,41 +276,29 @@ public class ApplicationController implements Initializable{
     void handleSaveAction(ActionEvent event) {
         try {
             if(isModified){
-                isModified = false;
+                isModified = false; 
                 BufferedWriter bw = new BufferedWriter(new FileWriter(targetsFile));
                 bw.write("filename, classification, observations\n");
                 data.forEach((String key, Pair value) -> {
                     try {
-                        System.out.println(key + " " + value.toString());
                         bw.write(key + "," + value.getKey() + "," + value.getValue() + "\n");
                     } catch (IOException ex) {
                         Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 });
                 bw.close();
-                Image img = new Image("images/ic_done_black_48dp.png", true);
-                Notifications saveNotification = Notifications.create()
-                                .text("File was saved in " + targetsFile.getAbsolutePath())
-                                .hideAfter(Duration.seconds(3))
-                                .title("Save")
-                                .graphic(new ImageView(img))
-                                .position(Pos.TOP_RIGHT);
+                Image img = new Image("images/ic_done_black_48dp.png");
+                Notifications saveNotification = HIjACk.createNotification("File was saved in " + targetsFile.getAbsolutePath(), Duration.seconds(3), "Save", new ImageView(img), Pos.TOP_RIGHT);
                 saveNotification.show();
             }
             else{
-                Image img = new Image("images/ic_info_black_48dp.png", true);
-                Notifications saveNotification = Notifications.create()
-                                .text("Nothing to save")
-                                .hideAfter(Duration.seconds(3))
-                                .title("Save")
-                                .graphic(new ImageView(img))
-                                .position(Pos.TOP_RIGHT);
+                Image img = new Image("images/ic_info_black_48dp.png");
+                Notifications saveNotification = HIjACk.createNotification("Nothing to save", Duration.seconds(3), "Save", new ImageView(img), Pos.TOP_RIGHT);
                 saveNotification.show();
             }
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
     }
     
     @FXML
@@ -337,7 +318,8 @@ public class ApplicationController implements Initializable{
         }
     }
 
-    void initData(Stage appStage, File choice, List<String> listOfNames) throws FileNotFoundException, IOException {
+    void initData(File choice, List<String> listOfNames) throws FileNotFoundException, IOException {
+        Stage appStage = HIjACk.getCurrentStage();
         currentDir = choice;
         logFile = checkExistingLog(choice, choice.getName() + ".csv");
         targetsFile = checkExistingLog(choice, choice.getName() + "-targets.csv");
@@ -391,10 +373,11 @@ public class ApplicationController implements Initializable{
             index = 0;
             firstImage = imageList.get(index);
         }
-        System.out.println("first is null? " +  firstImage);
         loadImage(currentDir.getAbsolutePath() + "/" + firstImage, firstImage);
         appStage.setOnCloseRequest((WindowEvent event) -> {
-            exitWithUnsavedModifications();
+            if(!exitWithUnsavedModifications()){
+                event.consume();
+            }
         });
     }
      
@@ -421,13 +404,9 @@ public class ApplicationController implements Initializable{
                 statusIcon.setImage(img);
                 if(lastEdition != null){                    
                     EUNISClass.setText(lastEdition);
-                    EUNISClass.requestFocus();
-                    EUNISClass.selectAll();
                 }
-            }
-            else{
-                Image img = new Image("images/ic_done_black_18dp.png");
-                statusIcon.setImage(img);
+                EUNISClass.requestFocus();
+                EUNISClass.selectAll();
             }
             File imagefile = new File(pathOfImage);
             Image image = new Image(imagefile.toURI().toURL().toString());
@@ -435,13 +414,11 @@ public class ApplicationController implements Initializable{
             fileName.setText("Image: " + filename);
             if(logFile != null){
                 CSVRecord record = records.get(imageList.indexOf(filename));
-                //System.out.println(filename + " ---- with record: " + record.get("filename"));
-                longitude.setText("Lon: " + record.get("longitude") + "\u00B0");
-                latitude.setText("Lat: " + record.get("latitude") + "\u00B0");
+                longitude.setText("Lon: " + record.get("longitude"));
+                latitude.setText("Lat: " + record.get("latitude"));
                 depth.setText("Target Depth: " + Double.toString(Double.valueOf(record.get("depth")) + Double.valueOf(record.get("altitude"))) + "m");
             }
             imageIndex.setText((index + 1) + "/" + imageList.size());
-            EUNISClass.requestFocus();
         } catch (MalformedURLException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -481,7 +458,6 @@ public class ApplicationController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("Application initialized");
-        assert root != null : "fx:id=\"root\" was not injected: check your FXML file 'application.fxml'.";
         assert nextButton != null : "fx:id=\"nextButton\" was not injected: check your FXML file 'application.fxml'.";
         assert EUNISClass != null : "fx:id=\"EUNISClass\" was not injected: check your FXML file 'application.fxml'.";
         assert obsTextField != null : "fx:id=\"obsTextField\" was not injected: check your FXML file 'application.fxml'.";
@@ -501,19 +477,17 @@ public class ApplicationController implements Initializable{
         if(!isModified){
             return true;
         }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Do you want to save before leaving?", ButtonType.YES, ButtonType.NO);
-        alert.setHeaderText("You have unsaved changes");
-        alert.setTitle("Unsaved Changes");
-        alert.setGraphic(new ImageView("images/ic_report_problem_black_48dp.png"));
+        Alert alert = HIjACk.createAlert(Alert.AlertType.NONE, "Unsaved changes", "Do you want to save before leaving?", 
+                new ImageView("images/ic_report_problem_black_48dp.png"), new ButtonType("Yes", ButtonBar.ButtonData.YES), new ButtonType("No", ButtonBar.ButtonData.NO), new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
         alert.showAndWait();
         ButtonType result = alert.getResult();
         
-        if(result.equals(ButtonType.YES)){
-            handleSaveAction(new ActionEvent());
+        if(!result.getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)){
+            if(result.getButtonData().equals(ButtonBar.ButtonData.YES)){
+                handleSaveAction(new ActionEvent());
+            }
             return true;
         }
-        else{
-            return false;
-        }
+        return false;
     }
 }
