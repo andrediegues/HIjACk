@@ -4,11 +4,9 @@ Hijack is an image visualizer that eases the tagging phase of classifying images
 
 ## Getting Started
 
-Under construction (tutorial video coming up)
-
 ### Prerequisites
 
-Hijack is a JavaFX project, which means you should have installed Java (8 or above). If you want to use Gradle there's also a Gradle build file.
+Hijack is a JavaFX project, which means you should have installed Java (8 or above). To build it you need to use Gradle.
 
  - To install Java 8, download the [Java 8 SE Developer Kit](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) and follow the instructions available [here](https://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html).
  - To install Gradle follow the instructions available [here](https://gradle.org/install/).
@@ -23,20 +21,17 @@ Just clone this repository, or download and unzip it.
 To start the application just open a terminal in the Hijack folder and run:
 
 ```
-java -jar HIjACk/dist/HIjACk.jar
-```
-or with Gradle:
-```
 gradle jfxRun
 ```
 
 ### Windows 10
 
-Just run the HIjACk.jar file in the HIjACk/dist/ folder with Oracle Java 8 Runtime (or double click it).
+Instructions coming up...
 
 ## Built With
 
 * [JavaFX](http://www.oracle.com/technetwork/java/javase/overview/javafx-overview-2158620.html)
+* [Gradle](https://gradle.org)
 * [Scene Builder](http://gluonhq.com/products/scene-builder/) 
 * [Material Design Icons by Google](http://google.github.io/material-design-icons/)
 
