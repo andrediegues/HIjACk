@@ -17,7 +17,10 @@ import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -379,6 +382,12 @@ public class ApplicationController implements Initializable{
                 event.consume();
             }
         });
+        
+        Timeline autosave5min = new Timeline(new KeyFrame(Duration.seconds(300), (ActionEvent event) -> {
+            handleSaveAction(new ActionEvent());
+        }));
+        autosave5min.setCycleCount(Timeline.INDEFINITE);
+        autosave5min.play();
     }
      
     private File checkExistingLog(File file, String name){
