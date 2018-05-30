@@ -17,7 +17,10 @@ import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -26,17 +29,21 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.Region;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -56,46 +63,38 @@ public class ApplicationController implements Initializable{
     private boolean isModified;
     private Map<String, Pair<String, String>> data; 
     private String lastEdition;
-    private String firstUnlabeledImage;
+    private String firstImage;
     private CSVParser csvParser;
     private List<CSVRecord> records;
+    private int index;
 
-    @FXML // fx:id="root"
-    private VBox root; // Value injected by FXMLLoader
+    @FXML
+    private Button nextButton;
 
-    @FXML // fx:id="listView"
-    private ListView<String> listView; // Value injected by FXMLLoader
+    @FXML
+    private TextField EUNISClass;
 
-    @FXML // fx:id="previousButton"
-    private Button previousButton; // Value injected by FXMLLoader
-
-    @FXML // fx:id="imageView"
-    private ImageView imageView; // Value injected by FXMLLoader
-
-    @FXML // fx:id="nextButton"
-    private Button nextButton; // Value injected by FXMLLoader
-
-    @FXML // fx:id="EUNISClass"
-    private TextField EUNISClass; // Value injected by FXMLLoader
+    @FXML
+    private TextField obsTextField;
 
     @FXML
     private ImageView statusIcon;
 
-    @FXML // fx:id="obsTextField"
-    private TextField obsTextField; // Value injected by FXMLLoader
+    @FXML
+    private Button editButton;
 
-    @FXML // fx:id="editButton"
-    private Button editButton; // Value injected by FXMLLoader
+    @FXML
+    private Button saveButton;
 
-    @FXML // fx:id="saveButton"
-    private Button saveButton; // Value injected by FXMLLoader
+    @FXML
+    private Button fullScreenButton;
 
-    @FXML // fx:id="fullScreenButton"
-    private Button fullScreenButton; // Value injected by FXMLLoader
+    @FXML
+    private Button previousButton;
 
-    @FXML // fx:id="fileName"
-    private Label fileName; // Value injected by FXMLLoader
-    
+    @FXML
+    private Label fileName;
+
     @FXML
     private Label longitude;
 
@@ -106,18 +105,36 @@ public class ApplicationController implements Initializable{
     private Label depth;
     
     @FXML
+    private Region imageRegion;
+    
+    @FXML
+    private Label imageIndex;
+    
+    @FXML
     void handleAboutAction(ActionEvent event) throws MalformedURLException {
-        Alert about = new Alert(Alert.AlertType.NONE);
-        about.setTitle("About HIjACK");
-        about.getButtonTypes().add(ButtonType.OK);
-        about.setGraphic(new Hyperlink("https://github.com/andrediegues/HIjACk"));        
+        Alert about = HIjACk.createAlert(Alert.AlertType.NONE, "About HIjACK", "", new Hyperlink("https://github.com/andrediegues/HIjACk"), new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE));
         about.showAndWait();
+    }
+    
+    @FXML
+    void handleShortcutsAction(ActionEvent event) {
+        FXMLLoader shortcuts = new FXMLLoader(getClass().getResource("shortcut.fxml"));
+        try {
+            Parent sc = shortcuts.load();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(sc));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Help - Shortcuts");
+            stage.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(ShortcutController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @FXML
     void handleOpenAction(ActionEvent event) { 
         try {
-            Stage currentStage = (Stage) root.getScene().getWindow();
+            Stage currentStage = HIjACk.getCurrentStage();
             FXMLLoader appLauncher = new FXMLLoader(getClass().getResource("appLauncher.fxml"));
             appLauncher.load();
             AppLauncherController appLauncherController = appLauncher.getController();
@@ -129,11 +146,11 @@ public class ApplicationController implements Initializable{
     }
     @FXML
     void handleCloseAction(ActionEvent event) {
-        try {            
-            if(!exitWithUnsavedModifications()){
-                return;
-            }
-            Stage currentStage = (Stage) root.getScene().getWindow();
+        if(!exitWithUnsavedModifications()){
+            return;
+        }  
+        try {       
+            Stage currentStage = HIjACk.getCurrentStage();
             currentStage.close();
             Parent appLauncher = FXMLLoader.load(getClass().getResource("appLauncher.fxml"));
             Stage newStage = new Stage();
@@ -141,6 +158,7 @@ public class ApplicationController implements Initializable{
             newStage.setScene(launcher);
             newStage.setTitle("HIjACk");
             newStage.show();
+            HIjACk.setCurrentStage(newStage);
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -151,137 +169,107 @@ public class ApplicationController implements Initializable{
         if(!exitWithUnsavedModifications()){
             return;
         }        
-        Stage currentStage = (Stage) root.getScene().getWindow();
+        Stage currentStage = HIjACk.getCurrentStage();
         currentStage.close();
-    }
-
-    @FXML
-    void handleFilesClick(MouseEvent event) {
-        editButton.setDisable(false);
-        if(listView.getSelectionModel().getSelectedItem() == null){
-            editButton.setDisable(true);
-            return;
-        }
-        loadImage(currentDir + "/" + listView.getSelectionModel().getSelectedItem(), listView.getSelectionModel().getSelectedItem());
-        //fileName.setText(listView.getSelectionModel().getSelectedItem());
     }
     
     @FXML
     void handleKeyPress(KeyEvent event) {
         editButton.setDisable(false);
-        String name = listView.getSelectionModel().getSelectedItem();
+        String name = imageList.get(index);
         KeyCode character = event.getCode();
-        int index = imageList.indexOf(name);
         if(event.isControlDown()){
             switch (character) {
                 case S:
                     handleSaveAction(new ActionEvent());
                     break;
-                case LEFT:
-                    System.out.println("ctrl+left");
+                case UP:
                     if(index > 10){
-                        listView.getSelectionModel().select(index - 10);
-                        listView.scrollTo(index - 10);
+                        name = imageList.get(index - 10);
+                        index -= 10;
                     }
                     else{
-                        listView.getSelectionModel().select(0);
-                        listView.scrollTo(0);
-                    }   name = listView.getSelectionModel().getSelectedItem();
+                        name = imageList.get(0);
+                        index = 0;
+                    }   
+                    event.consume();
                     break;
-                case RIGHT:
-                    System.out.println("ctrl+right");
+                case DOWN:
                     if(index < imageList.size() - 10){
-                        listView.getSelectionModel().select(index + 10);
-                        listView.scrollTo(index + 10);
+                        name = imageList.get(index + 10);
+                        index += 10;
                     }
-                    else{
-                        listView.getSelectionModel().select(imageList.size() - 1);
-                        listView.scrollTo(imageList.size() - 1);
-                    }   name = listView.getSelectionModel().getSelectedItem();
+                    else{                        
+                        name = imageList.get(imageList.size() - 1);
+                        index = imageList.size() - 1;
+                    }   
+                    event.consume();
                     break;
                 default:
                     break;
             }
         }
-        else if(character.equals(KeyCode.RIGHT) && index < imageList.size() - 1){
-            listView.getSelectionModel().select(index + 1);
-            listView.scrollTo(index + 1);
-            name = listView.getSelectionModel().getSelectedItem();
-        }
-        else if(character.equals(KeyCode.DOWN) || character.equals(KeyCode.UP)){
+        else if(character.equals(KeyCode.DOWN) && index < imageList.size() - 1){
+            name = imageList.get(index + 1);
+            index++;
             event.consume();
         }
-        else if(character.equals(KeyCode.LEFT) && index > 0){
-            listView.getSelectionModel().select(index - 1);
-            listView.scrollTo(index - 1);            
-            name = listView.getSelectionModel().getSelectedItem();
+        else if(character.equals(KeyCode.UP) && index > 0){          
+            name = imageList.get(index - 1);
+            index--;
+            event.consume();
         }
         else if(character.equals(KeyCode.ENTER)){
             handleEditAction(new ActionEvent());
-            listView.requestFocus();
+            EUNISClass.setStyle("-fx-text-fill: black;");
+            Image img = new Image("images/ic_done_black_18dp.png");
+            statusIcon.setImage(img);
+            return;
         }
         else{
             return;
         }
-        if(!listView.isVisible()){
-            listView.scrollTo(index);
-        }
-        //fileName.setText(name);
         String pathOfImage = currentDir.getAbsolutePath() + "/" + name;
         loadImage(pathOfImage, name);
     }
 
     @FXML
     void handleNextAction(ActionEvent event) {
-        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.RIGHT, false, false, false, false));
+        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.DOWN, false, false, false, false));
     }
     
     @FXML
     void handlePreviousAction(ActionEvent event) {
-        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.LEFT, false, false, false, false));
+        handleKeyPress(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.UP, false, false, false, false));
     }   
     
     @FXML
     void handleEditAction(ActionEvent event) {
-        String filename = listView.getSelectionModel().getSelectedItem();
-        if(filename == null){
-            return;
-        }
+        String filename = imageList.get(index);
         String classification = EUNISClass.getText().toUpperCase();
         if(classification.contains(" ")){
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please remove all blank spaces.", ButtonType.OK);
-            alert.setTitle(classification + " contains blank spaces!");
-            alert.setGraphic(new ImageView("images/ic_error_black_48dp.png"));
+            Alert whiteSpaces = HIjACk.createAlert(Alert.AlertType.NONE, classification + " contains blank spaces!", "Please remove all blank spaces.", 
+                    new ImageView("images/ic_error_black_48dp.png"), new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE));
+            whiteSpaces.showAndWait();
             classification = null;
-            alert.showAndWait();
         }
         else if(!isValid(classification)){
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please insert a valid classification.", ButtonType.OK);
-            alert.setTitle(classification + " is not a valid classification!");
-            alert.setGraphic(new ImageView("images/ic_error_black_48dp.png"));
+            Alert invalidClass = HIjACk.createAlert(Alert.AlertType.NONE, classification + " is not a valid classification!", "Please insert a valid classification.", 
+                    new ImageView("images/ic_error_black_48dp.png"), new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE));
+            invalidClass.showAndWait();
             classification = null;
-            alert.showAndWait();
         }
         else{
-            if(!classification.equals("")){
+            if(!classification.isEmpty()){
                 lastEdition = classification;
             }
-            String obs = obsTextField.getText();
             EUNISClass.setText(classification);
-            obsTextField.setText(obs);            
-            if(data.get(filename).getKey().equals(classification) && data.get(filename).getValue().equals(obs)){
-            } 
-            else {
+            String obs = obsTextField.getText();    
+            if(!data.get(filename).getKey().equals(classification) || !data.get(filename).getValue().equals(obs)){
                 isModified = true;
-                obsTextField.setText(obs);
                 data.put(filename, new Pair(classification, obs));
-                Image img = new Image("images/ic_done_black_48dp.png", true);
-                Notifications editNotification = Notifications.create()
-                        .text("Edited " + filename + " successfully")
-                        .hideAfter(Duration.seconds(3))
-                        .title("Edit")
-                        .graphic(new ImageView(img))
-                        .position(Pos.TOP_RIGHT);
+                Image img = new Image("images/ic_done_black_48dp.png");
+                Notifications editNotification = HIjACk.createNotification("Edited " + filename + " successfully", Duration.seconds(3), "Edit", new ImageView(img), Pos.TOP_RIGHT);
                 editNotification.show();
             }
         }
@@ -291,41 +279,29 @@ public class ApplicationController implements Initializable{
     void handleSaveAction(ActionEvent event) {
         try {
             if(isModified){
-                isModified = false;
+                isModified = false; 
                 BufferedWriter bw = new BufferedWriter(new FileWriter(targetsFile));
                 bw.write("filename, classification, observations\n");
                 data.forEach((String key, Pair value) -> {
                     try {
-                        System.out.println(key + " " + value.toString());
                         bw.write(key + "," + value.getKey() + "," + value.getValue() + "\n");
                     } catch (IOException ex) {
                         Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 });
                 bw.close();
-                Image img = new Image("images/ic_done_black_48dp.png", true);
-                Notifications saveNotification = Notifications.create()
-                                .text("File was saved in " + targetsFile.getAbsolutePath())
-                                .hideAfter(Duration.seconds(3))
-                                .title("Save")
-                                .graphic(new ImageView(img))
-                                .position(Pos.TOP_RIGHT);
+                Image img = new Image("images/ic_done_black_48dp.png");
+                Notifications saveNotification = HIjACk.createNotification("File was saved in " + targetsFile.getAbsolutePath(), Duration.seconds(3), "Save", new ImageView(img), Pos.TOP_RIGHT);
                 saveNotification.show();
             }
             else{
-                Image img = new Image("images/ic_info_black_48dp.png", true);
-                Notifications saveNotification = Notifications.create()
-                                .text("Nothing to save")
-                                .hideAfter(Duration.seconds(3))
-                                .title("Save")
-                                .graphic(new ImageView(img))
-                                .position(Pos.TOP_RIGHT);
+                Image img = new Image("images/ic_info_black_48dp.png");
+                Notifications saveNotification = HIjACk.createNotification("Nothing to save", Duration.seconds(3), "Save", new ImageView(img), Pos.TOP_RIGHT);
                 saveNotification.show();
             }
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
     }
     
     @FXML
@@ -334,18 +310,19 @@ public class ApplicationController implements Initializable{
             FXMLLoader fsImage = new FXMLLoader(getClass().getResource("fullscreen.fxml"));
             Parent fsRoot = fsImage.load();
             FullscreenController fsController = fsImage.getController();
-            fsController.addImageToImageView(currentDir + "/" + listView.getSelectionModel().getSelectedItem());
+            fsController.addImageToImageView(currentDir + "/" + imageList.get(index));
             Stage fsStage = new Stage();
             fsStage.setScene(new Scene(fsRoot));
             fsStage.initModality(Modality.APPLICATION_MODAL);
-            fsStage.setTitle(listView.getSelectionModel().getSelectedItem());
+            fsStage.setTitle(imageList.get(index));
             fsStage.showAndWait();
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    void initData(Stage appStage, File choice, List<String> listOfNames) throws FileNotFoundException, IOException {
+    void initData(File choice, List<String> listOfNames) throws FileNotFoundException, IOException {
+        Stage appStage = HIjACk.getCurrentStage();
         currentDir = choice;
         logFile = checkExistingLog(choice, choice.getName() + ".csv");
         targetsFile = checkExistingLog(choice, choice.getName() + "-targets.csv");
@@ -365,8 +342,9 @@ public class ApplicationController implements Initializable{
             targetsFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + "-targets.csv");
             listOfNames.forEach((name) -> {
                 data.put(name, new Pair("", ""));
-                if(firstUnlabeledImage == null){
-                    firstUnlabeledImage = name;
+                if(firstImage == null){
+                    firstImage = name;
+                    index = imageList.indexOf(firstImage);
                 }
             });
         }        
@@ -377,8 +355,9 @@ public class ApplicationController implements Initializable{
                 while((line = br.readLine()) != null){
                     if(line.split(",").length <= 1){
                         data.put(line.split(",")[0], new Pair("", ""));
-                        if(firstUnlabeledImage == null){
-                            firstUnlabeledImage = line.split(",")[0];
+                        if(firstImage == null){
+                            firstImage = line.split(",")[0];
+                            index = imageList.indexOf(firstImage);
                         }
                     }
                     else if(line.split(",").length <= 2){
@@ -393,15 +372,22 @@ public class ApplicationController implements Initializable{
                 Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        listView.getItems().addAll(listOfNames);
-        listView.getSelectionModel().select(firstUnlabeledImage);
-        listView.scrollTo(firstUnlabeledImage);
-        //fileName.setText(firstUnlabeledImage);
-        
-        loadImage(currentDir.getAbsolutePath() + "/" + firstUnlabeledImage, firstUnlabeledImage);
+        if(firstImage == null){
+            index = 0;
+            firstImage = imageList.get(index);
+        }
+        loadImage(currentDir.getAbsolutePath() + "/" + firstImage, firstImage);
         appStage.setOnCloseRequest((WindowEvent event) -> {
-            exitWithUnsavedModifications();
+            if(!exitWithUnsavedModifications()){
+                event.consume();
+            }
         });
+        
+        Timeline autosave5min = new Timeline(new KeyFrame(Duration.seconds(300), (ActionEvent event) -> {
+            handleSaveAction(new ActionEvent());
+        }));
+        autosave5min.setCycleCount(Timeline.INDEFINITE);
+        autosave5min.play();
     }
      
     private File checkExistingLog(File file, String name){
@@ -425,30 +411,23 @@ public class ApplicationController implements Initializable{
                 EUNISClass.setStyle("-fx-text-fill: red;");
                 Image img = new Image("images/ic_clear_black_18dp.png");
                 statusIcon.setImage(img);
-                if(lastEdition == null){
-                    listView.requestFocus();
-                }
-                else{                    
+                if(lastEdition != null){                    
                     EUNISClass.setText(lastEdition);
-                    EUNISClass.requestFocus();
-                    EUNISClass.selectAll();
                 }
-            }
-            else{
-                Image img = new Image("images/ic_done_black_18dp.png");
-                statusIcon.setImage(img);
+                EUNISClass.requestFocus();
+                EUNISClass.selectAll();
             }
             File imagefile = new File(pathOfImage);
             Image image = new Image(imagefile.toURI().toURL().toString());
-            imageView.setImage(image);
+            imageRegion.setBackground(new Background(new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, true, false))));
             fileName.setText("Image: " + filename);
             if(logFile != null){
                 CSVRecord record = records.get(imageList.indexOf(filename));
-                //System.out.println(filename + " ---- with record: " + record.get("filename"));
-                longitude.setText("Lon: " + record.get("longitude") + "\u00B0");
-                latitude.setText("Lat: " + record.get("latitude") + "\u00B0");
+                longitude.setText("Lon: " + record.get("longitude"));
+                latitude.setText("Lat: " + record.get("latitude"));
                 depth.setText("Target Depth: " + Double.toString(Double.valueOf(record.get("depth")) + Double.valueOf(record.get("altitude"))) + "m");
             }
+            imageIndex.setText((index + 1) + "/" + imageList.size());
         } catch (MalformedURLException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -488,25 +467,36 @@ public class ApplicationController implements Initializable{
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("Application initialized");
+        assert nextButton != null : "fx:id=\"nextButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert EUNISClass != null : "fx:id=\"EUNISClass\" was not injected: check your FXML file 'application.fxml'.";
+        assert obsTextField != null : "fx:id=\"obsTextField\" was not injected: check your FXML file 'application.fxml'.";
+        assert statusIcon != null : "fx:id=\"statusIcon\" was not injected: check your FXML file 'application.fxml'.";
+        assert editButton != null : "fx:id=\"editButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert fullScreenButton != null : "fx:id=\"fullScreenButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert previousButton != null : "fx:id=\"previousButton\" was not injected: check your FXML file 'application.fxml'.";
+        assert fileName != null : "fx:id=\"fileName\" was not injected: check your FXML file 'application.fxml'.";
+        assert longitude != null : "fx:id=\"longitude\" was not injected: check your FXML file 'application.fxml'.";
+        assert latitude != null : "fx:id=\"latitude\" was not injected: check your FXML file 'application.fxml'.";
+        assert depth != null : "fx:id=\"depth\" was not injected: check your FXML file 'application.fxml'.";
+        assert imageRegion != null : "fx:id=\"imageRegion\" was not injected: check your FXML file 'application.fxml'.";
     }
 
     private boolean exitWithUnsavedModifications() {
         if(!isModified){
             return true;
         }
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Do you want to save before leaving?", ButtonType.YES, ButtonType.NO);
-        alert.setHeaderText("You have unsaved changes");
-        alert.setTitle("Unsaved Changes");
-        alert.setGraphic(new ImageView("images/ic_report_problem_black_48dp.png"));
+        Alert alert = HIjACk.createAlert(Alert.AlertType.NONE, "Unsaved changes", "Do you want to save before leaving?", 
+                new ImageView("images/ic_report_problem_black_48dp.png"), new ButtonType("Yes", ButtonBar.ButtonData.YES), new ButtonType("No", ButtonBar.ButtonData.NO), new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE));
         alert.showAndWait();
         ButtonType result = alert.getResult();
         
-        if(result.equals(ButtonType.YES)){
-            handleSaveAction(new ActionEvent());
+        if(!result.getButtonData().equals(ButtonBar.ButtonData.CANCEL_CLOSE)){
+            if(result.getButtonData().equals(ButtonBar.ButtonData.YES)){
+                handleSaveAction(new ActionEvent());
+            }
             return true;
         }
-        else{
-            return false;
-        }
+        return false;
     }
 }
