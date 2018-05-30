@@ -8,7 +8,6 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-
 <VBox fx:id="root" alignment="CENTER" prefHeight="400.0" prefWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.ShortcutController">
    <children>
       <Text strokeType="OUTSIDE" strokeWidth="0.0" text="The following shortcuts are available:">
@@ -38,6 +37,9 @@
          <VBox.margin>
             <Insets />
          </VBox.margin>
+         <font>
+            <Font name="Monospaced Regular" size="13.0" />
+         </font>
       </Button>
    </children>
    <padding>

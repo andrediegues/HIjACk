@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.TextField?>
@@ -77,14 +78,18 @@
                               <Font name="Monospaced Regular" size="13.0" />
                            </font>
                         </TextField>
-                        <TextField fx:id="obsTextField" onKeyPressed="#handleKeyPress" promptText="Observations" HBox.hgrow="ALWAYS">
+                        <MenuButton fx:id="speciesMenuButton" mnemonicParsing="false" popupSide="TOP" text="Species" HBox.hgrow="ALWAYS">
+                          <items>
+                              <SeparatorMenuItem mnemonicParsing="false" />
+                            <MenuItem mnemonicParsing="false" onAction="#handleNewEntry" text="New entry..." />
+                          </items>
                            <padding>
-                              <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </padding>
                            <font>
                               <Font name="Monospaced Regular" size="13.0" />
                            </font>
-                        </TextField>
+                        </MenuButton>
                         <ImageView fx:id="statusIcon" pickOnBounds="true" preserveRatio="true" />
                         <Button fx:id="editButton" focusTraversable="false" mnemonicParsing="false" onAction="#handleEditAction">
                            <padding>

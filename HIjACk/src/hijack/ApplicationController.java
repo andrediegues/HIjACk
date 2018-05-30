@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -33,11 +34,14 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
@@ -61,21 +65,19 @@ public class ApplicationController implements Initializable{
     private File currentDir;
     private List<String> imageList;
     private boolean isModified;
-    private Map<String, Pair<String, String>> data; 
+    private Map<String, Pair<Eunis, List<String>>> data; 
     private String lastEdition;
     private String firstImage;
     private CSVParser csvParser;
     private List<CSVRecord> records;
     private int index;
+    private List<String> species;
 
     @FXML
     private Button nextButton;
 
     @FXML
     private TextField EUNISClass;
-
-    @FXML
-    private TextField obsTextField;
 
     @FXML
     private ImageView statusIcon;
@@ -109,6 +111,9 @@ public class ApplicationController implements Initializable{
     
     @FXML
     private Label imageIndex;
+    
+    @FXML
+    private MenuButton speciesMenuButton;
     
     @FXML
     void handleAboutAction(ActionEvent event) throws MalformedURLException {
@@ -260,14 +265,14 @@ public class ApplicationController implements Initializable{
             classification = null;
         }
         else{
+            Eunis eunis = new Eunis(classification);
             if(!classification.isEmpty()){
                 lastEdition = classification;
             }
             EUNISClass.setText(classification);
-            String obs = obsTextField.getText();    
-            if(!data.get(filename).getKey().equals(classification) || !data.get(filename).getValue().equals(obs)){
+            if(!data.get(filename).getKey().equals(eunis) || !data.get(filename).getValue().equals(species)){
                 isModified = true;
-                data.put(filename, new Pair(classification, obs));
+                data.put(filename, new Pair(classification, species));
                 Image img = new Image("images/ic_done_black_48dp.png");
                 Notifications editNotification = HIjACk.createNotification("Edited " + filename + " successfully", Duration.seconds(3), "Edit", new ImageView(img), Pos.TOP_RIGHT);
                 editNotification.show();
@@ -281,7 +286,20 @@ public class ApplicationController implements Initializable{
             if(isModified){
                 isModified = false; 
                 BufferedWriter bw = new BufferedWriter(new FileWriter(targetsFile));
-                bw.write("filename, classification, observations\n");
+                if(logFile != null){
+                    bw.write("filename, date, longitude, latitude, depth, classification, level1, level2, level3, level4, level5, level6, species\n");
+                    data.forEach((String key, Pair value) -> {
+                        try {
+                            // for loop to iterate all species; put lon, lat, depth, date
+                            bw.write(key + "," + value.getKey().toString() + "," + value.getValue() + "\n");
+                        } catch (IOException ex) {
+                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    });
+                }
+                else{
+                    bw.write("filename, classification, level1, level2, level3, level4, level5, level6, species\n");
+                }
                 data.forEach((String key, Pair value) -> {
                     try {
                         bw.write(key + "," + value.getKey() + "," + value.getValue() + "\n");
@@ -320,6 +338,31 @@ public class ApplicationController implements Initializable{
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+    @FXML
+    void handleNewEntry(ActionEvent event) {
+        try {
+            FXMLLoader newEntry = new FXMLLoader(getClass().getResource("addSpecies.fxml"));
+            Parent root = newEntry.load();
+            AddSpeciesController controller = newEntry.getController();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Adding new species...");
+            stage.showAndWait();
+            
+            String newItem = controller.getSpeciesName();
+            MenuItem newSpeciesItem = new MenuItem(newItem, new ImageView(new Image("images/ic_clear_black_18dp.png")));
+            speciesMenuButton.getItems().add(newSpeciesItem);
+            species.add(newItem);
+            newSpeciesItem.getGraphic().setOnMouseClicked((MouseEvent event1) -> {
+              speciesMenuButton.getItems().remove(newSpeciesItem);
+              species.remove(newItem);
+            });
+        } catch (IOException ex) {
+            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     void initData(File choice, List<String> listOfNames) throws FileNotFoundException, IOException {
         Stage appStage = HIjACk.getCurrentStage();
@@ -330,6 +373,7 @@ public class ApplicationController implements Initializable{
         isModified = false;
         editButton.setDisable(true);
         data = new TreeMap<>();
+        species = new ArrayList<>();
         if(logFile != null){
             Reader in = new FileReader(logFile);
             csvParser = new CSVParser(new BufferedReader(in), CSVFormat.DEFAULT
@@ -341,7 +385,7 @@ public class ApplicationController implements Initializable{
         if(targetsFile == null){
             targetsFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + "-targets.csv");
             listOfNames.forEach((name) -> {
-                data.put(name, new Pair("", ""));
+                data.put(name, new Pair(new Eunis(""), new ArrayList<>()));
                 if(firstImage == null){
                     firstImage = name;
                     index = imageList.indexOf(firstImage);
@@ -354,7 +398,7 @@ public class ApplicationController implements Initializable{
                 String line = br.readLine();
                 while((line = br.readLine()) != null){
                     if(line.split(",").length <= 1){
-                        data.put(line.split(",")[0], new Pair("", ""));
+                        data.put(line.split(",")[0], new Pair(new Eunis(""), new ArrayList<>()));
                         if(firstImage == null){
                             firstImage = line.split(",")[0];
                             index = imageList.indexOf(firstImage);
@@ -364,7 +408,7 @@ public class ApplicationController implements Initializable{
                         data.put(line.split(",")[0], new Pair(line.split(",")[1], ""));
                     }
                     else{
-                        data.put(line.split(",")[0], new Pair(line.split(",")[1], line.split(",")[2]));
+                        data.put(line.split(",")[0], new Pair(new Eunis(line.split(",")[2]), new ArrayList<>()));
                     }
                 }   
                 br.close();
@@ -403,8 +447,8 @@ public class ApplicationController implements Initializable{
     private void loadImage(String pathOfImage, String filename) {
         try {
             if(data.containsKey(filename)){
-                EUNISClass.setText(data.get(filename).getKey());
-                obsTextField.setText(data.get(filename).getValue());
+                EUNISClass.setText(data.get(filename).getKey().getClassification());
+                // load list of species
                 EUNISClass.setStyle("-fx-text-fill: black;");
             } 
             if(EUNISClass.getText().equals("")){
@@ -432,44 +476,13 @@ public class ApplicationController implements Initializable{
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public boolean isValid(String classification){
-        if(classification.isEmpty() || classification.equals("-1")){
-            return true;
-        }
-        String[] classes = classification.split("/");
-        if(classification.contains("/") && classes.length < 2){
-            return false;
-        }
-        for(String cl: classes){
-            Scanner scanner = new Scanner(cl);
-            if(!scanner.hasNext()){
-                return false;
-            }
-            String c = scanner.next();
-            if(c.equals("")){
-                return false;
-            }
-            char level1 = c.charAt(0);
-            if(!Character.isAlphabetic(level1)){
-                return false;
-            }
-            int length = c.length();
-            for(int i = 1; i < length; i++){
-                if(!Character.isDigit(c.charAt(i)) && c.charAt(i) != '.'){
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("Application initialized");
         assert nextButton != null : "fx:id=\"nextButton\" was not injected: check your FXML file 'application.fxml'.";
         assert EUNISClass != null : "fx:id=\"EUNISClass\" was not injected: check your FXML file 'application.fxml'.";
-        assert obsTextField != null : "fx:id=\"obsTextField\" was not injected: check your FXML file 'application.fxml'.";
+        assert speciesMenuButton != null : "fx:id=\"speciesMenuButton\" was not injected: check your FXML file 'application.fxml'.";
         assert statusIcon != null : "fx:id=\"statusIcon\" was not injected: check your FXML file 'application.fxml'.";
         assert editButton != null : "fx:id=\"editButton\" was not injected: check your FXML file 'application.fxml'.";
         assert saveButton != null : "fx:id=\"saveButton\" was not injected: check your FXML file 'application.fxml'.";
@@ -498,5 +511,26 @@ public class ApplicationController implements Initializable{
             return true;
         }
         return false;
+    }
+    private boolean isValid(String classification){
+        if(classification.isEmpty() || classification.equals("-1")){
+            return true;
+        }
+        Scanner scanner = new Scanner(classification);
+        if(!scanner.hasNext()){
+            return false;
+        }
+        String c = scanner.next();
+        char type = c.charAt(0);
+        if(!Character.isAlphabetic(type)){
+            return false;
+        }
+        int length = c.length();
+        for(int i = 1; i < length; i++){
+            if(!Character.isDigit(c.charAt(i)) && c.charAt(i) != '.'){
+                return false;
+            }
+        }
+        return true;
     }
 }
