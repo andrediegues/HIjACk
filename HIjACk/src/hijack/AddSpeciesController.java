@@ -21,6 +21,11 @@ public class AddSpeciesController implements Initializable {
     @FXML
     void handleAddNewSpecies(ActionEvent event) {
         newSpeciesName = speciesName.getText();
+        HIjACk.getCurrentStage().close();
+    }
+    @FXML
+    void handleCancelAction(ActionEvent event){
+        HIjACk.getCurrentStage().close();
     }
     
     /**

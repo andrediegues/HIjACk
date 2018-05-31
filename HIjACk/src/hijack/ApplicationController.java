@@ -25,6 +25,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -57,6 +58,7 @@ import org.controlsfx.control.Notifications;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.controlsfx.control.action.Action;
 
 public class ApplicationController implements Initializable{
     
@@ -343,21 +345,27 @@ public class ApplicationController implements Initializable{
     void handleNewEntry(ActionEvent event) {
         try {
             FXMLLoader newEntry = new FXMLLoader(getClass().getResource("addSpecies.fxml"));
-            Parent root = newEntry.load();
+            Parent neRoot = newEntry.load();
             AddSpeciesController controller = newEntry.getController();
+            Stage currentStage = HIjACk.getCurrentStage();
             Stage stage = new Stage();
-            stage.setScene(new Scene(root));
+            stage.setScene(new Scene(neRoot));
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Adding new species...");
+            HIjACk.setCurrentStage(stage);
             stage.showAndWait();
-            
+            HIjACk.setCurrentStage(currentStage);
             String newItem = controller.getSpeciesName();
+            if(newItem.isEmpty() || species.contains(newItem)){
+                return;
+            }
             MenuItem newSpeciesItem = new MenuItem(newItem, new ImageView(new Image("images/ic_clear_black_18dp.png")));
-            speciesMenuButton.getItems().add(newSpeciesItem);
+            speciesMenuButton.getItems().add(0, newSpeciesItem);
             species.add(newItem);
+            newSpeciesItem.setDisable(true);
             newSpeciesItem.getGraphic().setOnMouseClicked((MouseEvent event1) -> {
-              speciesMenuButton.getItems().remove(newSpeciesItem);
-              species.remove(newItem);
+                speciesMenuButton.getItems().remove(newSpeciesItem);
+                species.remove(newItem);
             });
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);

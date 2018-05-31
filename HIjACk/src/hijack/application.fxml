@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.ApplicationController">
+<VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1366.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hijack.ApplicationController">
    <children>
       <MenuBar focusTraversable="false" style="-fx-font: 10pt &quot;Monospaced&quot;;">
         <menus>
@@ -78,7 +78,7 @@
                               <Font name="Monospaced Regular" size="13.0" />
                            </font>
                         </TextField>
-                        <MenuButton fx:id="speciesMenuButton" mnemonicParsing="false" popupSide="TOP" text="Species" HBox.hgrow="ALWAYS">
+                        <MenuButton fx:id="speciesMenuButton" focusTraversable="false" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" popupSide="TOP" text="Species" HBox.hgrow="ALWAYS">
                           <items>
                               <SeparatorMenuItem mnemonicParsing="false" />
                             <MenuItem mnemonicParsing="false" onAction="#handleNewEntry" text="New entry..." />
