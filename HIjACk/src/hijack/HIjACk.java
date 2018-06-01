@@ -1,6 +1,13 @@
 package hijack;
 
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -19,9 +26,13 @@ import org.controlsfx.control.Notifications;
  */
 public class HIjACk extends Application {
     private static Stage currentStage;
+    private static HashMap<String, String> eunis;
+    private static HashMap<String, String> aphiaID;
 
     @Override
     public void start(Stage stage) throws Exception {
+        eunis = readLocalDB(new File("src/db/EunisCode.csv"));
+        aphiaID = readLocalDB(new File("src/db/AphiaIDspecies.csv"));
         currentStage = stage;
         VBox root = FXMLLoader.load(getClass().getResource("appLauncher.fxml"));        
         Scene scene = new Scene(root);
@@ -64,5 +75,28 @@ public class HIjACk extends Application {
      */
     public static void main(String[] args) {
         launch(args);
+    }
+
+    private HashMap<String, String> readLocalDB(File file) {
+        HashMap<String, String> hm = new HashMap<>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line = br.readLine();
+            while((line = br.readLine()) != null){
+                hm.put(line.split(",")[0], line.split(",")[1]);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(HIjACk.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        return hm;
+    }
+
+    public static HashMap<String, String> getEunis() {
+        return eunis;
+    }
+
+    public static HashMap<String, String> getAphiaID() {
+        return aphiaID;
     }
 }

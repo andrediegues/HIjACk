@@ -21,11 +21,9 @@ import java.util.logging.Logger;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -42,7 +40,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundPosition;
@@ -58,7 +55,6 @@ import org.controlsfx.control.Notifications;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.controlsfx.control.action.Action;
 
 public class ApplicationController implements Initializable{
     
@@ -289,7 +285,7 @@ public class ApplicationController implements Initializable{
                 isModified = false; 
                 BufferedWriter bw = new BufferedWriter(new FileWriter(targetsFile));
                 if(logFile != null){
-                    bw.write("filename, date, longitude, latitude, depth, classification, level1, level2, level3, level4, level5, level6, species\n");
+                    bw.write("filename, date, longitude, latitude, depth, EunisCode, EunisName, level1, level2, level3, level4, level5, level6, species, AphiaID\n");
                     data.forEach((String key, Pair value) -> {
                         try {
                             // for loop to iterate all species; put lon, lat, depth, date
@@ -300,7 +296,7 @@ public class ApplicationController implements Initializable{
                     });
                 }
                 else{
-                    bw.write("filename, classification, level1, level2, level3, level4, level5, level6, species\n");
+                    bw.write("filename, EunisCode, EunisName, level1, level2, level3, level4, level5, level6, species, AphiaID\n");
                 }
                 data.forEach((String key, Pair value) -> {
                     try {
@@ -355,15 +351,17 @@ public class ApplicationController implements Initializable{
             HIjACk.setCurrentStage(stage);
             stage.showAndWait();
             HIjACk.setCurrentStage(currentStage);
+            
             String newItem = controller.getSpeciesName();
             if(newItem.isEmpty() || species.contains(newItem)){
                 return;
             }
-            MenuItem newSpeciesItem = new MenuItem(newItem, new ImageView(new Image("images/ic_clear_black_18dp.png")));
+            Button remove = new Button("", new ImageView(new Image("images/ic_clear_black_18dp.png")));
+            MenuItem newSpeciesItem = new MenuItem(newItem, remove);
             speciesMenuButton.getItems().add(0, newSpeciesItem);
             species.add(newItem);
-            newSpeciesItem.setDisable(true);
-            newSpeciesItem.getGraphic().setOnMouseClicked((MouseEvent event1) -> {
+            newSpeciesItem.setStyle("-fx-text-fill: black;");
+            remove.setOnAction((ActionEvent event1) -> {
                 speciesMenuButton.getItems().remove(newSpeciesItem);
                 species.remove(newItem);
             });
