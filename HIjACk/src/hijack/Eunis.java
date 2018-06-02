@@ -6,6 +6,7 @@ package hijack;
  */
 public class Eunis {
     String classification;
+    String name;
     String level1;
     String level2;
     String level3;
@@ -13,7 +14,7 @@ public class Eunis {
     String level5;
     String level6;
     
-    public Eunis(String c){
+    public Eunis(String c, String n){
         this.level1 = "";
         this.level2 = "";
         this.level3 = "";
@@ -21,6 +22,7 @@ public class Eunis {
         this.level5 = "";
         this.level6 = "";   
         this.classification = c;
+        this.name = n;
         this.getClassByLevels(c);
     }   
 
@@ -50,7 +52,7 @@ public class Eunis {
 
     @Override
     public String toString() {
-        return this.classification + "," + this.level1 + "," + this.level2 + "," + this.level3 + "," + this.level4 + "," + this.level5 + "," + this.level6;
+        return this.classification + "," + this.name + "," + this.level1 + "," + this.level2 + "," + this.level3 + "," + this.level4 + "," + this.level5 + "," + this.level6;
     }
 
     public String getClassification() {

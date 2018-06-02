@@ -11,6 +11,7 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -50,7 +51,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Duration;
-import javafx.util.Pair;
 import org.controlsfx.control.Notifications;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -63,11 +63,13 @@ public class ApplicationController implements Initializable{
     private File currentDir;
     private List<String> imageList;
     private boolean isModified;
-    private Map<String, Pair<Eunis, List<String>>> data; 
+    private Map<String, DataRecord> data; 
     private String lastEdition;
     private String firstImage;
     private CSVParser csvParser;
+    private CSVParser targetCsvParser;
     private List<CSVRecord> records;
+    private List<CSVRecord> targetCsvRecords;
     private int index;
     private List<String> species;
 
@@ -182,6 +184,7 @@ public class ApplicationController implements Initializable{
         String name = imageList.get(index);
         KeyCode character = event.getCode();
         if(event.isControlDown()){
+            event.consume();
             switch (character) {
                 case S:
                     handleSaveAction(new ActionEvent());
@@ -195,7 +198,6 @@ public class ApplicationController implements Initializable{
                         name = imageList.get(0);
                         index = 0;
                     }   
-                    event.consume();
                     break;
                 case DOWN:
                     if(index < imageList.size() - 10){
@@ -206,7 +208,6 @@ public class ApplicationController implements Initializable{
                         name = imageList.get(imageList.size() - 1);
                         index = imageList.size() - 1;
                     }   
-                    event.consume();
                     break;
                 default:
                     break;
@@ -249,7 +250,8 @@ public class ApplicationController implements Initializable{
     @FXML
     void handleEditAction(ActionEvent event) {
         String filename = imageList.get(index);
-        String classification = EUNISClass.getText().toUpperCase();
+        String classification = EUNISClass.getText();
+        HashMap<String, String> hm = HIjACk.getEunis();
         if(classification.contains(" ")){
             Alert whiteSpaces = HIjACk.createAlert(Alert.AlertType.NONE, classification + " contains blank spaces!", "Please remove all blank spaces.", 
                     new ImageView("images/ic_error_black_48dp.png"), new ButtonType("Ok", ButtonBar.ButtonData.OK_DONE));
@@ -263,14 +265,27 @@ public class ApplicationController implements Initializable{
             classification = null;
         }
         else{
-            Eunis eunis = new Eunis(classification);
-            if(!classification.isEmpty()){
-                lastEdition = classification;
+            String extClass = classification.toUpperCase();
+            Eunis eunis;
+            if(hm.containsKey(classification)){
+                extClass += " - " + hm.get(classification);
+                eunis = new Eunis(classification.toUpperCase(), hm.get(classification));
             }
-            EUNISClass.setText(classification);
-            if(!data.get(filename).getKey().equals(eunis) || !data.get(filename).getValue().equals(species)){
+            else{
+                eunis = new Eunis(classification.toUpperCase(), "");
+            }
+            if(!classification.isEmpty()){
+                lastEdition = extClass;
+            }
+            EUNISClass.setText(extClass);
+            if(!data.get(filename).eunis.getClassification().equals(classification.toUpperCase()) || !data.get(filename).species.equals(species)){
                 isModified = true;
-                data.put(filename, new Pair(classification, species));
+                if(logFile != null){
+                    data.put(filename, new DataRecord(filename, records.get(imageList.indexOf(filename)).get("date"), longitude.getText().split(": ")[1], latitude.getText().split(": ")[1], depth.getText().split(": ")[1], eunis, species));
+                }
+                else{
+                    data.put(filename, new DataRecord(filename, "", "", "", "", eunis, species));
+                }
                 Image img = new Image("images/ic_done_black_48dp.png");
                 Notifications editNotification = HIjACk.createNotification("Edited " + filename + " successfully", Duration.seconds(3), "Edit", new ImageView(img), Pos.TOP_RIGHT);
                 editNotification.show();
@@ -284,23 +299,10 @@ public class ApplicationController implements Initializable{
             if(isModified){
                 isModified = false; 
                 BufferedWriter bw = new BufferedWriter(new FileWriter(targetsFile));
-                if(logFile != null){
-                    bw.write("filename, date, longitude, latitude, depth, EunisCode, EunisName, level1, level2, level3, level4, level5, level6, species, AphiaID\n");
-                    data.forEach((String key, Pair value) -> {
-                        try {
-                            // for loop to iterate all species; put lon, lat, depth, date
-                            bw.write(key + "," + value.getKey().toString() + "," + value.getValue() + "\n");
-                        } catch (IOException ex) {
-                            Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    });
-                }
-                else{
-                    bw.write("filename, EunisCode, EunisName, level1, level2, level3, level4, level5, level6, species, AphiaID\n");
-                }
-                data.forEach((String key, Pair value) -> {
+                bw.write("filename, date, longitude, latitude, depth, EunisCode, EunisName, level1, level2, level3, level4, level5, level6, species, AphiaID\n");
+                data.forEach((String key, DataRecord value) -> {
                     try {
-                        bw.write(key + "," + value.getKey() + "," + value.getValue() + "\n");
+                        bw.write(value.toString());
                     } catch (IOException ex) {
                         Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -353,18 +355,8 @@ public class ApplicationController implements Initializable{
             HIjACk.setCurrentStage(currentStage);
             
             String newItem = controller.getSpeciesName();
-            if(newItem.isEmpty() || species.contains(newItem)){
-                return;
-            }
-            Button remove = new Button("", new ImageView(new Image("images/ic_clear_black_18dp.png")));
-            MenuItem newSpeciesItem = new MenuItem(newItem, remove);
-            speciesMenuButton.getItems().add(0, newSpeciesItem);
-            species.add(newItem);
-            newSpeciesItem.setStyle("-fx-text-fill: black;");
-            remove.setOnAction((ActionEvent event1) -> {
-                speciesMenuButton.getItems().remove(newSpeciesItem);
-                species.remove(newItem);
-            });
+            
+            addSpeciesName(newItem);
         } catch (IOException ex) {
             Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -389,9 +381,9 @@ public class ApplicationController implements Initializable{
             records = csvParser.getRecords();
         }
         if(targetsFile == null){
-            targetsFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + "-targets.csv");
+            targetsFile = new File(choice.getAbsolutePath() + "/" + choice.getName() + "-targets.csv");            
             listOfNames.forEach((name) -> {
-                data.put(name, new Pair(new Eunis(""), new ArrayList<>()));
+                data.put(name, new DataRecord(name));
                 if(firstImage == null){
                     firstImage = name;
                     index = imageList.indexOf(firstImage);
@@ -400,28 +392,36 @@ public class ApplicationController implements Initializable{
         }        
         else{
             try {
-                BufferedReader br = new BufferedReader(new FileReader(targetsFile));
-                String line = br.readLine();
-                while((line = br.readLine()) != null){
-                    if(line.split(",").length <= 1){
-                        data.put(line.split(",")[0], new Pair(new Eunis(""), new ArrayList<>()));
+                targetCsvParser = new CSVParser(new BufferedReader(new FileReader(logFile)), CSVFormat.DEFAULT
+                .withFirstRecordAsHeader()
+                .withIgnoreHeaderCase()
+                .withTrim());
+                targetCsvRecords = csvParser.getRecords();
+                
+                for (int i = 0; i < targetCsvRecords.size(); i++) {
+                    CSVRecord get = targetCsvRecords.get(i);
+                    List<String> listOfSpecies = new ArrayList<>();
+                    int j = i + 1;
+                    listOfSpecies.add(get.get("AphiaID") + " - " + get.get("species"));
+                    
+                    while(get.get("filename").equals(targetCsvRecords.get(j).get("filename"))){
+                        listOfSpecies.add(targetCsvRecords.get(j).get("AphiaID") + " - " + targetCsvRecords.get(j).get("species"));
+                    }
+                    i = j;
+                    DataRecord dr = new DataRecord(get.get("filename"), get.get("date"), get.get("longitude"), get.get("latitude"), get.get("depth"), new Eunis(get.get("EunisCode"), get.get("EunisName")), listOfSpecies);
+                    data.put(get.get("filename"), dr);
+                    if(dr.eunis.classification.isEmpty()){
                         if(firstImage == null){
-                            firstImage = line.split(",")[0];
-                            index = imageList.indexOf(firstImage);
+                            index = imageList.indexOf(dr.filename);
+                            firstImage = imageList.get(index);
                         }
                     }
-                    else if(line.split(",").length <= 2){
-                        data.put(line.split(",")[0], new Pair(line.split(",")[1], ""));
-                    }
-                    else{
-                        data.put(line.split(",")[0], new Pair(new Eunis(line.split(",")[2]), new ArrayList<>()));
-                    }
-                }   
-                br.close();
+                }
             } catch (IOException ex) {
                 Logger.getLogger(ApplicationController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        System.out.println(data.toString());
         if(firstImage == null){
             index = 0;
             firstImage = imageList.get(index);
@@ -452,10 +452,17 @@ public class ApplicationController implements Initializable{
 
     private void loadImage(String pathOfImage, String filename) {
         try {
+            if(species.size() > 0){
+                speciesMenuButton.getItems().remove(0, species.size()-1);
+            }
             if(data.containsKey(filename)){
-                EUNISClass.setText(data.get(filename).getKey().getClassification());
-                // load list of species
+                DataRecord dr = data.get(filename);
+                EUNISClass.setText(dr.eunis.classification);
                 EUNISClass.setStyle("-fx-text-fill: black;");
+                species = dr.species;
+                dr.species.forEach((String s) -> {
+                    addSpeciesName(s);
+                });
             } 
             if(EUNISClass.getText().equals("")){
                 EUNISClass.setStyle("-fx-text-fill: red;");
@@ -475,7 +482,7 @@ public class ApplicationController implements Initializable{
                 CSVRecord record = records.get(imageList.indexOf(filename));
                 longitude.setText("Lon: " + record.get("longitude"));
                 latitude.setText("Lat: " + record.get("latitude"));
-                depth.setText("Target Depth: " + Double.toString(Double.valueOf(record.get("depth")) + Double.valueOf(record.get("altitude"))) + "m");
+                depth.setText("Target Depth: " + Double.toString(Double.valueOf(record.get("depth")) + Double.valueOf(record.get("altitude"))));
             }
             imageIndex.setText((index + 1) + "/" + imageList.size());
         } catch (MalformedURLException ex) {
@@ -523,9 +530,6 @@ public class ApplicationController implements Initializable{
             return true;
         }
         Scanner scanner = new Scanner(classification);
-        if(!scanner.hasNext()){
-            return false;
-        }
         String c = scanner.next();
         char type = c.charAt(0);
         if(!Character.isAlphabetic(type)){
@@ -538,5 +542,20 @@ public class ApplicationController implements Initializable{
             }
         }
         return true;
+    }
+
+    private void addSpeciesName(String newItem) {
+        if(newItem.isEmpty() || species.contains(newItem)){
+            return;
+        }
+        Button remove = new Button("", new ImageView(new Image("images/ic_clear_black_18dp.png")));
+        MenuItem newSpeciesItem = new MenuItem(newItem, remove);
+        speciesMenuButton.getItems().add(0, newSpeciesItem);
+        species.add(newItem);
+        newSpeciesItem.setStyle("-fx-text-fill: black;");
+        remove.setOnAction((ActionEvent event1) -> {
+            speciesMenuButton.getItems().remove(newSpeciesItem);
+            species.remove(newItem);
+        });    
     }
 }
