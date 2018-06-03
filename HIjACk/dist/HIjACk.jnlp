@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="HIjACk.jar" size="35002" download="eager" />
+    <jar href="HIjACk.jar" size="35726" download="eager" />
     <jar href="lib/commons-csv-1.5.jar" size="41586" download="eager" />
     <jar href="lib/controlsfx-8.40.14.jar" size="1215643" download="eager" />
   </resources>

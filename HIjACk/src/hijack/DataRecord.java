@@ -49,7 +49,7 @@ public class DataRecord {
                 row += filename + "," + date + "," + longitude + "," + latitude + "," + depth + "," + eunis.toString() + "," + split[1] + "," + split[0] + '\n';
             }
             else{
-                row += filename + "," + date + "," + longitude + "," + latitude + "," + depth + "," + eunis.toString() + "," + split[0] + "," + "" + '\n';
+                row += filename + "," + date + "," + longitude + "," + latitude + "," + depth + "," + eunis.toString() + "," + get + ",\n";
             }
         }
         return row;

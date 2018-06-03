@@ -7,6 +7,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 /**
  * FXML Controller class
@@ -33,6 +35,12 @@ public class AddSpeciesController implements Initializable {
     @FXML
     void handleCancelAction(ActionEvent event){
         HIjACk.getCurrentStage().close();
+    }
+    @FXML
+    void handleKeyPressed(KeyEvent event){
+        if(event.getCode() == KeyCode.ENTER){
+            handleAddNewSpecies(new ActionEvent());
+        }
     }
     
     /**
