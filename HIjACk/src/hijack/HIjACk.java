@@ -31,8 +31,16 @@ public class HIjACk extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        eunis = readLocalDB(new File("src/db/EunisCode.csv"));
-        aphiaID = readLocalDB(new File("src/db/AphiaIDspecies.csv"));
+        System.out.println("Working Directory = " +
+              System.getProperty("user.dir"));
+        if(!System.getProperty("user.dir").contains("dist")){
+            eunis = readLocalDB(new File("dist/db/EunisCode.csv"));
+            aphiaID = readLocalDB(new File("dist/db/AphiaIDspecies.csv"));
+        }
+        else{
+            eunis = readLocalDB(new File("db/EunisCode.csv"));
+            aphiaID = readLocalDB(new File("db/AphiaIDspecies.csv"));
+        }
         currentStage = stage;
         VBox root = FXMLLoader.load(getClass().getResource("appLauncher.fxml"));        
         Scene scene = new Scene(root);
